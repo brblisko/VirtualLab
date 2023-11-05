@@ -11,5 +11,5 @@ func getFPGAs(c *gin.Context) {
 }
 
 func getTunnels(c *gin.Context) {
-	c.JSON(http.StatusOK, Tunnels)
+	c.JSON(http.StatusOK, tunnels)
 }

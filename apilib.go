@@ -1,16 +1,14 @@
 package main
 
 type FPGA struct {
-	ID    string `json:"id"`
 	IP    string `json:"ip"`
 	State string `json:"state"`
 }
 
 type Tunnel struct {
-	ID        string `json:"id"`
 	FPGAIP    string `json:"fpgaip"`
 	ClientIP  string `json:"clientip"`
-	Timestamp int    `json:"timestamp"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 type Instruction struct {

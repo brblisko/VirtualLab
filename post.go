@@ -1,40 +1,115 @@
 package main
 
 import (
-	"net"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+func newTunnel(instruction Instruction) {
+	var tmpTunnel = Tunnel{
+		FPGAIP:    instruction.FPGAIP,
+		ClientIP:  instruction.ClientIP,
+		Timestamp: time.Now().Unix(),
+	}
+
+	for i := 0; i < len(FPGAs); i++ {
+		if FPGAs[i].IP == instruction.FPGAIP {
+			FPGAs[i].State = "TUNNEL"
+		}
+	}
+	tunnels = append(tunnels, tmpTunnel)
+}
+
+func deleteTunnel(instruction Instruction) {
+	for i := 0; i < len(tunnels); i++ {
+		if (tunnels[i].FPGAIP == instruction.FPGAIP) && (tunnels[i].ClientIP == instruction.ClientIP) {
+			tunnels[i] = tunnels[len(tunnels)-1]
+			tunnels[len(tunnels)-1] = Tunnel{}
+			tunnels = tunnels[:len(tunnels)-1]
+		}
+	}
+
+	for i := 0; i < len(FPGAs); i++ {
+		if FPGAs[i].IP == instruction.FPGAIP {
+			FPGAs[i].State = "DEFAULT"
+		}
+	}
+}
+
 func instructionCreate(instruction Instruction) ErrorInternal {
+	table := "filter"
+	chain := "FORWARD"
+	ruleSpec := []string{
+		"-i", "enp0s8",
+		"-o", "enp0s3",
+		"-s", instruction.ClientIP,
+		"-d", instruction.FPGAIP + "/24",
+		"-j", "ACCEPT",
+	}
+
+	err = ipt.Append(table, chain, ruleSpec...)
+	if err != nil {
+		return ErrorInternal{ErrorCode: 1, Message: err.Error()}
+	}
+
+	ruleSpec = []string{
+		"-i", "enp0s3",
+		"-o", "enp0s8",
+		"-s", instruction.FPGAIP + "/24",
+		"-d", instruction.ClientIP,
+		"-j", "ACCEPT",
+	}
+
+	err = ipt.Append(table, chain, ruleSpec...)
+	if err != nil {
+		return ErrorInternal{ErrorCode: 1, Message: err.Error()}
+	}
+
+	newTunnel(instruction)
 
 	return ErrorInternal{ErrorCode: 0, Message: ""}
 }
 
 func instructionDelete(instruction Instruction) ErrorInternal {
-	return ErrorInternal{ErrorCode: 0, Message: ""}
-}
-
-func checkIPsInstruction(instruction Instruction) ErrorInternal {
-	if addr := net.ParseIP(instruction.FPGAIP); addr == nil {
-		return ErrorInternal{ErrorCode: WRONG_IP, Message: "wrong FPGA IP address format"}
+	table := "filter"
+	chain := "FORWARD"
+	ruleSpec := []string{
+		"-i", "enp0s8",
+		"-o", "enp0s3",
+		"-s", instruction.ClientIP,
+		"-d", instruction.FPGAIP + "/24",
+		"-j", "ACCEPT",
 	}
 
-	if addr := net.ParseIP(instruction.ClientIP); addr == nil {
-		return ErrorInternal{ErrorCode: WRONG_IP, Message: "wrong Client IP address format"}
+	err = ipt.Delete(table, chain, ruleSpec...)
+	if err != nil {
+		return ErrorInternal{ErrorCode: 1, Message: err.Error()}
 	}
+
+	ruleSpec = []string{
+		"-i", "enp0s3",
+		"-o", "enp0s8",
+		"-s", instruction.FPGAIP + "/24",
+		"-d", instruction.ClientIP,
+		"-j", "ACCEPT",
+	}
+
+	err = ipt.Delete(table, chain, ruleSpec...)
+	if err != nil {
+		return ErrorInternal{ErrorCode: 1, Message: err.Error()}
+	}
+
+	deleteTunnel(instruction)
 
 	return ErrorInternal{ErrorCode: 0, Message: ""}
 }
 
 func parseInstruction(instruction Instruction) ErrorInternal {
 	if instruction.Type == "CREATE" {
-		if err := checkIPsInstruction(instruction); err.ErrorCode != OK {
-			return err
-		}
-
-		if err := instructionCreate(instruction); err.ErrorCode != OK {
+		err := instructionCreate(instruction)
+		if err.ErrorCode != OK {
 			return err
 		}
 
@@ -42,11 +117,8 @@ func parseInstruction(instruction Instruction) ErrorInternal {
 	}
 
 	if instruction.Type == "DELETE" {
-		if err := checkIPsInstruction(instruction); err.ErrorCode == OK {
-			return err
-		}
-
-		if err := instructionDelete(instruction); err.ErrorCode != OK {
+		err := instructionDelete(instruction)
+		if err.ErrorCode != OK {
 			return err
 		}
 
