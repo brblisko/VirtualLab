@@ -2,6 +2,7 @@ package main
 
 type FPGA struct {
 	IP    string `json:"ip"`
+	Port  int    `json:"port"`
 	State string `json:"state"`
 }
 
@@ -20,6 +21,12 @@ type Instruction struct {
 type ErrorInternal struct {
 	ErrorCode int    `json:"errorcode"`
 	Message   string `json:"message"`
+}
+
+type Commons struct {
+	PYNQInterface   string
+	ClientInterface string
+	StartingPort    int
 }
 
 const (

@@ -42,8 +42,8 @@ func instructionCreate(instruction Instruction) ErrorInternal {
 	table := "filter"
 	chain := "FORWARD"
 	ruleSpec := []string{
-		"-i", "enp0s8",
-		"-o", "enp0s3",
+		"-i", common.ClientInterface,
+		"-o", common.PYNQInterface,
 		"-s", instruction.ClientIP,
 		"-d", instruction.FPGAIP + "/24",
 		"-j", "ACCEPT",
@@ -55,8 +55,8 @@ func instructionCreate(instruction Instruction) ErrorInternal {
 	}
 
 	ruleSpec = []string{
-		"-i", "enp0s3",
-		"-o", "enp0s8",
+		"-i", common.PYNQInterface,
+		"-o", common.ClientInterface,
 		"-s", instruction.FPGAIP + "/24",
 		"-d", instruction.ClientIP,
 		"-j", "ACCEPT",
@@ -76,8 +76,8 @@ func instructionDelete(instruction Instruction) ErrorInternal {
 	table := "filter"
 	chain := "FORWARD"
 	ruleSpec := []string{
-		"-i", "enp0s8",
-		"-o", "enp0s3",
+		"-i", common.ClientInterface,
+		"-o", common.PYNQInterface,
 		"-s", instruction.ClientIP,
 		"-d", instruction.FPGAIP + "/24",
 		"-j", "ACCEPT",
@@ -89,8 +89,8 @@ func instructionDelete(instruction Instruction) ErrorInternal {
 	}
 
 	ruleSpec = []string{
-		"-i", "enp0s3",
-		"-o", "enp0s8",
+		"-i", common.PYNQInterface,
+		"-o", common.ClientInterface,
 		"-s", instruction.FPGAIP + "/24",
 		"-d", instruction.ClientIP,
 		"-j", "ACCEPT",

@@ -8,16 +8,28 @@ import (
 )
 
 var FPGAs = []FPGA{
-	{IP: "10.0.2.4", State: "DEFAULT"},
+	{IP: "192.168.2.99", State: "DEFAULT"},
 }
 
 var ipt, err = iptables.New()
 
 var tunnels = []Tunnel{}
 
+var common = Commons{
+	ClientInterface: "enp0s8",
+	PYNQInterface:   "enp0s9",
+	StartingPort:    20000,
+}
+
 func main() {
 	if err != nil {
 		fmt.Printf("Error creating iptables client: %v\n", err)
+		return
+	}
+
+	boot()
+	if err != nil {
+		fmt.Printf("Error running boot commands: %v\n", err)
 		return
 	}
 
