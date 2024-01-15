@@ -9,6 +9,7 @@ type FPGA struct {
 type Tunnel struct {
 	FPGAIP    string `json:"fpgaip"`
 	ClientIP  string `json:"clientip"`
+	User      string `json:"user"`
 	Timestamp int64  `json:"timestamp"`
 }
 
@@ -16,6 +17,7 @@ type Instruction struct {
 	Type     string `json:"type"`
 	FPGAIP   string `json:"fpgaip"`
 	ClientIP string `json:"clientip"`
+	User     string `json:"user"`
 }
 
 type ErrorInternal struct {

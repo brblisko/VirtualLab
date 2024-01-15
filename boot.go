@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os/exec"
 	"strconv"
 )
 
@@ -24,10 +25,8 @@ func masqueradeCreate() {
 		dport := strconv.Itoa(common.StartingPort + i)
 		destination := FPGAs[i].IP + ":9090"
 
-		// Create the rule
 		ruleSpec := []string{"-p", protocol, "--dport", dport, "-j", "DNAT", "--to-destination", destination}
 
-		// Append the rule to the specified table and chain
 		err = ipt.Append(table, chain, ruleSpec...)
 		if err != nil {
 			return
@@ -38,11 +37,16 @@ func masqueradeCreate() {
 	table := "nat"
 	chain := "POSTROUTING"
 
-	// Create the rule
 	ruleSpec := []string{"-j", "MASQUERADE"}
 
-	// Append the rule to the specified table and chain
 	err = ipt.Append(table, chain, ruleSpec...)
+	if err != nil {
+		return
+	}
+
+	cmd := exec.Command("iptables", "-P", "FORWARD", "DROP")
+
+	err := cmd.Run()
 	if err != nil {
 		return
 	}
@@ -52,6 +56,16 @@ func masqueradeCreate() {
 func tablesFlush() {
 	// Flush all rules in the default table
 	err = ipt.ClearChain("filter", "INPUT")
+	if err != nil {
+		return
+	}
+
+	err = ipt.ClearChain("filter", "FORWARD")
+	if err != nil {
+		return
+	}
+
+	err = ipt.ClearChain("filter", "OUTPUT")
 	if err != nil {
 		return
 	}

@@ -5,10 +5,12 @@ import (
 
 	"github.com/coreos/go-iptables/iptables"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/ssh"
 )
 
 var FPGAs = []FPGA{
 	{IP: "192.168.2.99", State: "DEFAULT"},
+	{IP: "192.168.2.100", State: "DEFAULT"},
 }
 
 var ipt, err = iptables.New()
@@ -16,10 +18,12 @@ var ipt, err = iptables.New()
 var tunnels = []Tunnel{}
 
 var common = Commons{
-	ClientInterface: "enp0s8",
+	ClientInterface: "enp0s3",
 	PYNQInterface:   "enp0s9",
 	StartingPort:    20000,
 }
+
+var client *ssh.Client
 
 func main() {
 	if err != nil {

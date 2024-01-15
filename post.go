@@ -1,11 +1,111 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"os/user"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+func changeOwner(dir string) {
+	u, err := user.Lookup("student")
+	if err != nil {
+		fmt.Printf("Error getting user information: %v\n", err)
+		return
+	}
+
+	uid, err := strconv.Atoi(u.Uid)
+	if err != nil {
+		fmt.Printf("Error converting UID to integer: %v\n", err)
+		return
+	}
+
+	gid, err := strconv.Atoi(u.Gid)
+	if err != nil {
+		fmt.Printf("Error converting GID to integer: %v\n", err)
+		return
+	}
+
+	err = os.Chown(dir, uid, gid)
+	if err != nil {
+		fmt.Printf("Error changing ownership: %v\n", err)
+		return
+	}
+
+}
+
+func checkDir(dir string) {
+	dir = "/UserData/" + dir
+
+	_, err := os.Stat(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(dir, os.ModePerm)
+			if err != nil {
+				fmt.Printf("Error creating directory: %v\n", err)
+				return
+			}
+
+			changeOwner(dir)
+
+		} else {
+			fmt.Printf("Error checking directory: %v\n", err)
+		}
+		return
+	}
+
+}
+
+func mount(instruction Instruction) {
+	checkDir(instruction.User)
+
+	connect(instruction.FPGAIP)
+
+	// Open a new session
+	session, err := client.NewSession()
+	if err != nil {
+		fmt.Println("Failed to create session:", err)
+		os.Exit(1)
+	}
+	defer session.Close()
+
+	// Run the command on the remote server
+	output, err := session.CombinedOutput("/root/mount.sh " + instruction.User)
+	if err != nil {
+		fmt.Println("Failed to run command:", err)
+		os.Exit(1)
+	}
+	fmt.Printf(string(output))
+	client.Close()
+
+}
+
+func unmount(instruction Instruction) {
+	connect(instruction.FPGAIP)
+
+	// Open a new session
+	session, err := client.NewSession()
+	if err != nil {
+		fmt.Println("Failed to create session:", err)
+		os.Exit(1)
+	}
+	defer session.Close()
+
+	// Run the command on the remote server
+	output, err := session.CombinedOutput("/root/unmount.sh")
+	if err != nil {
+		fmt.Println("Failed to run command:", err)
+		os.Exit(1)
+	}
+	fmt.Printf(string(output))
+
+	client.Close()
+
+}
 
 func newTunnel(instruction Instruction) {
 	var tmpTunnel = Tunnel{
@@ -39,13 +139,15 @@ func deleteTunnel(instruction Instruction) {
 }
 
 func instructionCreate(instruction Instruction) ErrorInternal {
+	mount(instruction)
+
 	table := "filter"
 	chain := "FORWARD"
 	ruleSpec := []string{
 		"-i", common.ClientInterface,
 		"-o", common.PYNQInterface,
 		"-s", instruction.ClientIP,
-		"-d", instruction.FPGAIP + "/24",
+		"-d", instruction.FPGAIP,
 		"-j", "ACCEPT",
 	}
 
@@ -57,7 +159,7 @@ func instructionCreate(instruction Instruction) ErrorInternal {
 	ruleSpec = []string{
 		"-i", common.PYNQInterface,
 		"-o", common.ClientInterface,
-		"-s", instruction.FPGAIP + "/24",
+		"-s", instruction.FPGAIP,
 		"-d", instruction.ClientIP,
 		"-j", "ACCEPT",
 	}
@@ -73,13 +175,15 @@ func instructionCreate(instruction Instruction) ErrorInternal {
 }
 
 func instructionDelete(instruction Instruction) ErrorInternal {
+	unmount(instruction)
+
 	table := "filter"
 	chain := "FORWARD"
 	ruleSpec := []string{
 		"-i", common.ClientInterface,
 		"-o", common.PYNQInterface,
 		"-s", instruction.ClientIP,
-		"-d", instruction.FPGAIP + "/24",
+		"-d", instruction.FPGAIP,
 		"-j", "ACCEPT",
 	}
 
@@ -91,7 +195,7 @@ func instructionDelete(instruction Instruction) ErrorInternal {
 	ruleSpec = []string{
 		"-i", common.PYNQInterface,
 		"-o", common.ClientInterface,
-		"-s", instruction.FPGAIP + "/24",
+		"-s", instruction.FPGAIP,
 		"-d", instruction.ClientIP,
 		"-j", "ACCEPT",
 	}
