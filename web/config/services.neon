@@ -1,5 +1,6 @@
 services:
 	- App\Router\RouterFactory::createRouter
+	- App\Models\ReservationFacade
 
 
 search:

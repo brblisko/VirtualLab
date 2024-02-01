@@ -1,0 +1,19 @@
+{block content}
+    <h1 n:block="title">{$message}</h1>
+
+    {foreach $reservations as $reservation}
+    <div>
+        <h2>
+        {$reservation->user_id}
+        </h2>
+
+        <div>
+        {$reservation->time}
+        </div>
+
+    </div>
+    {/foreach}
+
+
+
+{/block}
