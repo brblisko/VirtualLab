@@ -17,7 +17,7 @@ var tunnels = []Tunnel{}
 var common = Commons{
 	ClientInterface: "enp0s3",
 	PYNQInterface:   "enp0s9",
-	StartingPort:    20000,
+	StartingPort:    30000,
 }
 
 var client *ssh.Client

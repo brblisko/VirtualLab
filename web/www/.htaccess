@@ -3,6 +3,7 @@
 # Grant all access permissions
 Require all granted
 
+
 # Disable directory listing for security reasons
 <IfModule mod_autoindex.c>
 	Options -Indexes

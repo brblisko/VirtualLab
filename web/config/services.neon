@@ -1,6 +1,8 @@
 services:
 	- App\Router\RouterFactory::createRouter
 	- App\Models\ReservationFacade
+	- App\Models\ApiFacade
+	- App\Services\ApiService
 
 
 search:
@@ -8,3 +10,4 @@ search:
 		classes:
 			- *Factory
 			- *Facade
+			- *Service

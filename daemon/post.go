@@ -108,9 +108,12 @@ func unmount(instruction Instruction) {
 }
 
 func newTunnel(instruction Instruction) {
+
 	var tmpTunnel = Tunnel{
-		FPGAIP:    instruction.FPGAIP,
-		ClientIP:  instruction.ClientIP,
+		FPGAIP:   instruction.FPGAIP,
+		ClientIP: instruction.ClientIP,
+		User:     instruction.User,
+
 		Timestamp: time.Now().Unix(),
 	}
 
