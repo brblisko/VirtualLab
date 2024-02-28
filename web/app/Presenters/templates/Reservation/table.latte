@@ -1,0 +1,108 @@
+{block content}
+    <h2>Available Time Slots</h2>
+    <div class="columns-container">
+        {for $i = 0; $i < 3; $i++}
+            {if $i == 2}
+                <div class="last-column">
+            {else}
+                <div class="column">
+            {/if}
+                <ul>
+                    {foreach $timeSlots as $key => $timeSlot}
+                        {if $key >= $columnStartIndex[$i] && $key <= $columnEndIndex[$i]}
+                            <div class="reservation">
+                                <div class="box"> 
+                                    {$timeSlot->format('d-m-Y H:i')}
+                                </div>
+
+                                <div class="box">
+                                </div>
+
+                                <div class="box">
+                                        <button class="reservation-button" data-timestamp="{$timeSlot}" type="submit">Reserve</button>
+                                    </form>
+                                </div>
+
+                            </div>
+                        {/if}
+                    {/foreach}
+                </ul>
+            </div>
+        {/for}
+    </div>
+{/block}
+
+{block scripts}
+
+<script>
+function fetchData() {
+    return fetch('/default/buttons')
+        .then(response => response.json())
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            throw error;
+        });
+}
+
+function updateButton(button, data) {
+    const timestamp = button.getAttribute('data-timestamp');
+
+    if (data.hasOwnProperty(timestamp)) {
+        const activeReservation = data[timestamp].active_reservation;
+
+        if (activeReservation) {
+            button.textContent = 'Cancel';
+            button.style.backgroundColor = 'lightcoral'; 
+        } else {
+            button.textContent = 'Reserve';
+            button.style.backgroundColor = 'lightgreen';
+        }
+    }
+}
+
+function addListener(button){
+    button.addEventListener('click', function() {
+            fetchData()
+                .then( data => {
+                    const timestamp = button.getAttribute('data-timestamp');
+                    if (data.hasOwnProperty(timestamp)) {
+                        const activeReservation = data[timestamp].active_reservation;
+                        const action = activeReservation ? 'cancel_reservation' : 'create_reservation';
+
+                        fetch('/default/reservation', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                timestamp: timestamp,
+                                action: action
+                            })
+                        })
+                        .then(response => {
+                            fetchData().then(updatedData => {
+                                updateButton(button, updatedData);
+                            });
+                        })
+                        .catch(error => console.error('Error:', error));
+                 }
+            });
+        });
+}
+
+window.onload = function() {
+    fetchData()
+        .then(data => {
+            const buttons = document.querySelectorAll('.reservation-button');
+
+            buttons.forEach(button => {
+                updateButton(button, data);
+                addListener(button);
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+}
+
+</script>
+
+{/block}

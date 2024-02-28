@@ -1,0 +1,36 @@
+body {
+  padding-top: 70px;
+}
+
+.columns-container {
+  width: 80%;
+  margin: 0 auto; /* This will center the div horizontally */
+  display: flex;
+}
+
+.column {
+  flex: 1;
+  margin-right: 10px; /* Adjust margin as needed */
+  border-left: 1px solid black; /* Line at the left side */
+}
+
+.last-column {
+  flex: 1;
+  margin-right: 10px; /* Adjust margin as needed */
+  border-left: 1px solid black; /* Line at the left side */
+  border-right: 1px solid black;
+}
+
+.column:last-child {
+  margin-right: 0; /* Remove margin for the last column */
+}
+
+.reservation {
+  display: flex;
+}
+
+.box {
+  border-top: 1px solid black;
+  flex: 1; /* Each box takes equal space */
+  padding: 10px; /* Optional: Add padding for spacing */
+}

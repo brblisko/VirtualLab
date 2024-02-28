@@ -22,6 +22,6 @@ final class LandingPagePresenter extends Nette\Application\UI\Presenter
     public function renderWelcome(): void
     {
         $this->template->message = $this->message;
-        $this->template->reservations = $this->facade->getAllReservations();
+        $this->template->reservations = $this->facade->getAllReservations("xvesel92");
     }
 }
