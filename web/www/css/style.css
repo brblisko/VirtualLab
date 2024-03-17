@@ -34,3 +34,24 @@ body {
   flex: 1; /* Each box takes equal space */
   padding: 10px; /* Optional: Add padding for spacing */
 }
+
+.nav-text {
+  color: #000 !important; /* Set color to match nav-link */
+}
+
+.nav-text:hover {
+  text-decoration: none !important; /* Remove underline on hover */
+  color: #000 !important; /* Ensure text color remains the same on hover */
+  cursor: default !important; /* Remove pointer cursor on hover */
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+}
+
+.header-container h2 {
+  margin-right: 20px;
+}

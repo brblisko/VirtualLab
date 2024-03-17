@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use DateTime;
 use Nette;
 use Nette\Utils\Json;
 
@@ -15,16 +16,16 @@ final class ReservationFacade
         $this->database = $database;
     }
 
-    public function getAllReservations($user)
+    public function getAllReservations($userId)
     {
-        return $this->database->table('Reservation')
-                              ->where('user_id', $user)
+        return $this->database->table('reservations')
+                              ->where('user_id', $userId)
                               ->fetchAll();
     }
 
     public function getAllReservationsTimestamp()
     {
-        $query = $this->database->table('Reservation')
+        $query = $this->database->table('reservations')
                               ->select('time, COUNT(*) AS count')
                               ->group('time');
 
@@ -36,29 +37,38 @@ final class ReservationFacade
         return $data;
     }
 
-    public function getAllReservationsUserTimestamp($user)
+    public function getReservationsCountUser($userId): int
     {
-        return $this->database->table('Reservation')
-                              ->where('user_id', $user)
+        $currentTime = new DateTime();
+        return $this->database->table('reservations')
+                              ->where('user_id', $userId)
+                              ->where('time > ?', $currentTime)
+                              ->count('*');
+    }
+
+    public function getAllReservationsUserTimestamp($userId)
+    {
+        return $this->database->table('reservations')
+                              ->where('user_id', $userId)
                               ->fetchAssoc('time');
     }
 
-    public function getLiveReservation($user)
+    public function getLiveReservation($userId)
     {
-        return $this->database->table('Reservation')
+        return $this->database->table('reservations')
                               ->where('time BETWEEN DATE_SUB(NOW(), INTERVAL 15 MINUTE) AND NOW()')
-                              ->where('user_id', $user)
+                              ->where('user_id', $userId)
                               ->fetchAll();
     }
 
-    public function deleteReservation($user, $timestamp) {
-        return $this->database->table('Reservation')->where('user_id', $user)->where('time', $timestamp)->delete();
+    public function deleteReservation($userId, $timestamp) {
+        return $this->database->table('reservations')->where('user_id', $userId)->where('time', $timestamp)->delete();
     }
 
-    public function insertReservation($user, $timestamp)
+    public function insertReservation($userId, $timestamp)
     {
-        return $this->database->table('Reservation')->insert([
-            'user_id' => $user,
+        return $this->database->table('reservations')->insert([
+            'user_id' => $userId,
             'time' => $timestamp
         ]);
     }

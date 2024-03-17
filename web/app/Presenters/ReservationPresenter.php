@@ -9,7 +9,7 @@ use Nette\Utils\DateTime;
 use App\Models\ReservationFacade;
 use Nette;
 
-final class ReservationPresenter extends Nette\Application\UI\Presenter
+final class ReservationPresenter extends DefaultPresenter
 {
 
     private $facade;

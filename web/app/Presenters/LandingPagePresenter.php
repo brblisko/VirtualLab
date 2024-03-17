@@ -7,7 +7,7 @@ namespace App\Presenters;
 use App\Models\ReservationFacade;
 use Nette;
 
-final class LandingPagePresenter extends Nette\Application\UI\Presenter
+final class LandingPagePresenter extends DefaultPresenter
 {
 
     private $facade;
@@ -22,6 +22,7 @@ final class LandingPagePresenter extends Nette\Application\UI\Presenter
     public function renderWelcome(): void
     {
         $this->template->message = $this->message;
-        $this->template->reservations = $this->facade->getAllReservations("xvesel92");
+        $userId = $this->getUser()->getId();
+        $this->template->reservations = $this->facade->getAllReservations($userId);
     }
 }

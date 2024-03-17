@@ -3,6 +3,7 @@ services:
 	- App\Models\ReservationFacade
 	- App\Models\ApiFacade
 	- App\Services\ApiService
+	- App\Models\Authenticator
 
 
 search:

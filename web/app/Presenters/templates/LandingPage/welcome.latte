@@ -1,6 +1,5 @@
 {block content}
     <h1 n:block="title">{$message}</h1>
-
     {foreach $reservations as $reservation}
     <div>
         <h2>
@@ -10,7 +9,11 @@
         <div>
         {$reservation->time}
         </div>
-    
+
+        <div>
+        {$username}
+        </div>
+
     </div>
     {/foreach}
 

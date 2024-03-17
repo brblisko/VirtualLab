@@ -7,7 +7,7 @@ namespace App\Presenters;
 use App\Models\ApiFacade;
 use Nette;
 
-final class ConnectionPresenter extends Nette\Application\UI\Presenter
+final class ConnectionPresenter extends DefaultPresenter
 {
 
 

@@ -1,5 +1,8 @@
 {block content}
-    <h2>Available Time Slots</h2>
+    <div class="header-container">
+        <h2>Available Time Slots</h2>
+        <span id="userReservations">Loading...</span>
+    </div>
     <div class="columns-container">
         {for $i = 0; $i < 3; $i++}
             {if $i == 2}
@@ -15,7 +18,7 @@
                                     {$timeSlot->format('d-m-Y H:i')}
                                 </div>
 
-                                <div class="box">
+                                <div class="box" id="{$timeSlot}">
                                 </div>
 
                                 <div class="box">
@@ -44,6 +47,18 @@ function fetchData() {
         });
 }
 
+async function fetchFpgaCount() {
+    try {
+        const response = await fetch('/default/get-fpga-count');
+        const data = await response.json();
+        return data.count;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        throw error;
+    }
+}
+
+
 function updateButton(button, data) {
     const timestamp = button.getAttribute('data-timestamp');
 
@@ -62,32 +77,44 @@ function updateButton(button, data) {
 
 function addListener(button){
     button.addEventListener('click', function() {
-            fetchData()
-                .then( data => {
-                    const timestamp = button.getAttribute('data-timestamp');
-                    if (data.hasOwnProperty(timestamp)) {
-                        const activeReservation = data[timestamp].active_reservation;
-                        const action = activeReservation ? 'cancel_reservation' : 'create_reservation';
+        fetchData()
+            .then( data => {
+                const timestamp = button.getAttribute('data-timestamp');
+                if (data.hasOwnProperty(timestamp)) {
+                    const activeReservation = data[timestamp].active_reservation;
+                    const action = activeReservation ? 'cancel_reservation' : 'create_reservation';
 
-                        fetch('/default/reservation', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                timestamp: timestamp,
-                                action: action
-                            })
+                    fetch('/default/reservation', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            timestamp: timestamp,
+                            action: action
                         })
-                        .then(response => {
-                            fetchData().then(updatedData => {
-                                updateButton(button, updatedData);
-                            });
-                        })
-                        .catch(error => console.error('Error:', error));
-                 }
-            });
+                    })
+                    .then(response => {
+                        fetchData().then(updatedData => {
+                            updateButton(button, updatedData);
+                            updateCounter();
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
         });
+    });
+}
+
+function updateCounter()
+{
+    fetch('/default/get-user-reservation-count')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("userReservations").textContent = "User reservation counter: " + data.count + "/5";
+            console.log(data.count);
+        })
+        .catch(error => console.error('Error:', error));
 }
 
 window.onload = function() {
@@ -101,7 +128,29 @@ window.onload = function() {
             });
         })
         .catch(error => console.error('Error fetching data:', error));
+        updateCounter();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetchAvailableSpots();
+
+    async function fetchAvailableSpots() {
+
+        const maxSpots = await fetchFpgaCount();
+        fetch('/default/allreservations')
+            .then(response => response.json())
+            .then(data => {
+                Object.keys(data).forEach(timestamp => {
+                    const reservationCount = data[timestamp].reservation_count;
+                    document.getElementById(timestamp).innerText = 'Current reservations: ' + reservationCount + '/' + maxSpots;
+                });
+            });
+    }
+
+    setInterval(fetchAvailableSpots, 60000);
+});
+
+
 
 </script>
 

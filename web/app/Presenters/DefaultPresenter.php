@@ -2,17 +2,30 @@
 
 namespace App\Presenters;
 
+use App\Models\ApiFacade;
 use App\Models\ReservationFacade;
 use Nette\Application\UI\Presenter;
 use Nette\Application\Responses\JsonResponse;
+use App\Models\Authenticator;
+use Nette\Bridges\ApplicationLatte\ILatteFactory;
+
+
 
 class DefaultPresenter extends Presenter
 {
-    private $facade;
+    private $res_facade;
+    private $api_facade;
+    private $authenticator;
 
-    public function __construct(ReservationFacade $facade)
+    /** @var ILatteFactory @inject */
+    public $latteFactory;
+
+
+    public function __construct(ReservationFacade $res_facade, Authenticator $authenticator, ApiFacade $api_facade)
     {
-        $this->facade = $facade;
+        $this->res_facade = $res_facade;
+        $this->authenticator = $authenticator;
+        $this->api_facade = $api_facade;
     }
 
     public function renderDefault()
@@ -20,9 +33,30 @@ class DefaultPresenter extends Presenter
         // Render default template
     }
 
-    public function actionGetLiveReservation($user)
+    protected function startup()
     {
-        $items = $this->facade->getLiveReservation($user);
+        parent::startup();
+        if (!$this->getUser()->isLoggedIn()) {
+            $this->redirect('Sign:in');
+        }
+    }
+
+
+    protected function beforeRender()
+    {
+        parent::beforeRender();
+
+        // Get the currently logged-in user
+        $user = $this->getUser()->getIdentity();
+
+        // Pass the username to the layout template
+        $this->template->username = $user ?  $user->getData()['username'] : null;
+    }
+
+    public function actionGetLiveReservation()
+    {
+        $userId = $this->getUser()->getId();
+        $items = $this->res_facade->getLiveReservation($userId);
 
          // Convert the items to a simple array of objects
          $responseData = [];
@@ -32,7 +66,7 @@ class DefaultPresenter extends Presenter
                  'time' => $item->time
              ];
          }
- 
+
          $this->sendJson($responseData);
     }
 
@@ -48,8 +82,8 @@ class DefaultPresenter extends Presenter
         $endTime = strtotime('+1 day', strtotime(date('Y-m-d H:i:s', $currentTime)));
 
         // Query reservations for the user within the time range
-        $userId =  "xvesel92";//$this->getUser()->getId();
-        $reservations = $this->facade->getAllReservationsUserTimestamp($userId);
+        $userId =  $this->getUser()->getId();
+        $reservations = $this->res_facade->getAllReservationsUserTimestamp($userId);
 
         // Construct the JSON response
         $buttons = [];
@@ -73,7 +107,7 @@ class DefaultPresenter extends Presenter
         // Calculate the end time (1 day from the current time)
         $endTime = strtotime('+1 day', strtotime(date('Y-m-d H:i:s', $currentTime)));
 
-        $reservations = $this->facade->getAllReservationsTimestamp();
+        $reservations = $this->res_facade->getAllReservationsTimestamp();
 
         // Construct the JSON response
         $buttons = [];
@@ -87,9 +121,22 @@ class DefaultPresenter extends Presenter
         $this->sendJson($buttons);
     }
 
+    public function actionGetFpgaCount(){
+        $this->payload->count = $this->api_facade->getAllFpgaCount();
+
+        $this->sendPayload();
+    }
+
+    public function actionGetUserReservationCount()
+    {
+        $this->payload->count = $this->res_facade->getReservationsCountUser($this->getUser()->getId());
+        
+        $this->sendPayload();
+    }
+
     public function actionReservation()
     {
-        $user = "xvesel92";
+        $userId = $this->getUser()->getId();
         
         $requestData = json_decode($this->getHttpRequest()->getRawBody(), true);
 
@@ -99,10 +146,10 @@ class DefaultPresenter extends Presenter
 
 
         if ($action == "create_reservation") {
-            $this->facade->insertReservation($user,$timestamp);
+            $this->res_facade->insertReservation($userId,$timestamp);
         }
         else if ($action == "cancel_reservation") {
-            $this->facade->deleteReservation($user, $timestamp);
+            $this->res_facade->deleteReservation($userId, $timestamp);
         }
 
         $response = new JsonResponse(['success' => true]);
