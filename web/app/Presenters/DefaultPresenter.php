@@ -84,13 +84,22 @@ class DefaultPresenter extends Presenter
         // Query reservations for the user within the time range
         $userId =  $this->getUser()->getId();
         $reservations = $this->res_facade->getAllReservationsUserTimestamp($userId);
+        $allReservations = $this->res_facade->getAllReservationsTimestamp();
+        $maxFpga = $this->api_facade->getAllFpgaCount();
+        $userResCounter = $this->res_facade->getReservationsCountUser($userId);
+
 
         // Construct the JSON response
         $buttons = [];
         for ($time = $next15Minutes; $time < $endTime; $time += 15 * 60) {
             $timestampKey = date('Y-m-d H:i:s', $time);
             $reservationExists = isset($reservations[$timestampKey]);
-            $buttons[$timestampKey] = ['active_reservation' => $reservationExists];
+
+            $reservationsCount = (isset($allReservations[$timestampKey])) ? $allReservations[$timestampKey] : 0;
+            
+            $locked = ($reservationsCount === $maxFpga) || ($userResCounter === 5);
+            $buttons[$timestampKey] = ['active_reservation' => $reservationExists,
+                                        'locked' => $locked];
         }
 
         // Return the JSON response
