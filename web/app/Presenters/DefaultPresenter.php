@@ -146,6 +146,9 @@ class DefaultPresenter extends Presenter
     public function actionReservation()
     {
         $userId = $this->getUser()->getId();
+
+        $maxFpga = $this->api_facade->getAllFpgaCount();
+        $reservations = $this->res_facade->getAllReservationsTimestamp();
         
         $requestData = json_decode($this->getHttpRequest()->getRawBody(), true);
 
@@ -153,6 +156,14 @@ class DefaultPresenter extends Presenter
         $timestamp = $requestData['timestamp'];
         $action = $requestData['action'];
 
+        $tmp = isset($reservations[$timestamp]) ? $reservations[$timestamp] : 0;
+
+        if(($tmp == $maxFpga) && ($action !== "cancel_reservation"))
+        {
+            $response = new JsonResponse(['success' => false]);
+            $this->sendResponse($response);
+            return;
+        }
 
         if ($action == "create_reservation") {
             $this->res_facade->insertReservation($userId,$timestamp);

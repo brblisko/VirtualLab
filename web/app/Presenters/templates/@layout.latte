@@ -6,10 +6,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-<link rel="stylesheet" href="{$basePath}/css/style.css">
-<link rel ="stylesheet" href="https://bootswatch.com/5/spacelab/bootstrap.min.css">
+  <link rel="stylesheet" href="{$basePath}/css/style.css">
+  <link rel ="stylesheet" href="https://bootswatch.com/5/spacelab/bootstrap.min.css">
 
   <title>{ifset title}{include title|stripHtml}{/ifset}</title>
+
+  <script>
+    function updateNavigationBar() {
+        fetch('/default/get-live-reservation')
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    document.getElementById('activeRes').style.display = 'block';
+                } else {
+                    document.getElementById('activeRes').style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    }
+
+    updateNavigationBar();
+    setInterval(updateNavigationBar, 60 *1000); // Update every 1 minutes
+  </script>
+  <script src="https://nette.github.io/resources/js/3/netteForms.min.js"></script>
+
+  <!-- Page specific scripts -->
+  {block scripts}{/block}
 
 </head>
 
@@ -37,7 +59,7 @@
             </li>
 
             <li class="nav-item" style="background-color: green;">
-              <a n:href ="Connection:test" id="activeRes" class="nav-link" style="display: none;" >Active reservation</a>
+              <a n:href ="Connection:active" id="activeRes" class="nav-link" style="display: none;" >Active reservation</a>
             </li>
 
             <li class="nav-item">
@@ -61,25 +83,6 @@
    
   {include content}
     
-  {block scripts}
-  <script>
-    function updateNavigationBar() {
-        fetch('/default/get-live-reservation?username=xvesel92')
-            .then(response => response.json())
-            .then(data => {
-                if (data.length > 0) {
-                    document.getElementById('activeRes').style.display = 'block';
-                } else {
-                    document.getElementById('activeRes').style.display = 'none';
-                }
-            })
-            .catch(error => console.error('Error fetching data:', error));
-    }
-
-    updateNavigationBar();
-    setInterval(updateNavigationBar, 5 * 60 *1000); // Update every 5 minutes
-  </script>
-  <script src="https://nette.github.io/resources/js/3/netteForms.min.js"></script>
-  {/block}
+  
 </body>
 </html>

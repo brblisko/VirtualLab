@@ -1,9 +1,11 @@
 services:
-	- App\Router\RouterFactory::createRouter
-	- App\Models\ReservationFacade
-	- App\Models\ApiFacade
-	- App\Services\ApiService
-	- App\Models\Authenticator
+    httpClient: GuzzleHttp\Client
+
+    # Other services
+    - App\Router\RouterFactory::createRouter
+    - App\Models\ReservationFacade
+    - App\Services\ApiService
+    - App\Models\Authenticator
 
 
 search:
