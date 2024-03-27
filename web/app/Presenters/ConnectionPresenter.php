@@ -41,7 +41,8 @@ final class ConnectionPresenter extends DefaultPresenter
     public function actionDebug() {
         $userId = $this->getUser()->getId();
 
-        $tunnelData = $this->facade->getTunnelsDataAndFilter($this->getUser()->getId());
+        $tunnelData = $this->facade->getTunnelsDataAndFilter((string) $this->getUser()->getId());
+        $tunnelData = $this->facade->getTunnelsData();
         $data = $this->res_facade->getLiveReservation($userId);
 
         // Convert the items to a simple array of objects
@@ -56,9 +57,8 @@ final class ConnectionPresenter extends DefaultPresenter
 
         
         $fpgas = $this->facade->getFpgaInfo();
-        $output = var_export($fpgas, true);
+        $output = var_export($tunnelData, true);
         $this->sendResponse(new TextResponse($output));
-
     }
 
     private function createTunnel()
@@ -79,15 +79,24 @@ final class ConnectionPresenter extends DefaultPresenter
 
         if($fpga === null)
         {
-            throw new \Exception("No fpga available.");
+            // throw new \Exception("no fpga");
+            $tunnels = $this->facade->getTunnelsData();
+            foreach($tunnels as $item)
+            {
+                $liveRes = $this->res_facade->getLiveReservation($item['user']);
+                if(empty($liveRes))
+                {
+                    $this->facade->sendInstruction($item['fpgaip'], $item['clientip'], $item['user'], "DELETE");
+
+                    $this->facade->sendInstruction($item['fpgaip'], $clientIp, (string) $userId, "CREATE");
+                    throw new \Exception("Tunnel Created");
+                }
+            }
         }
         else
         {
             $this->facade->sendInstruction($fpga['ip'], $clientIp,(string) $userId, "CREATE");
         }
-
-
-
     }
 
     protected function beforeRender()
@@ -113,7 +122,7 @@ final class ConnectionPresenter extends DefaultPresenter
             $this->createTunnel();
             throw new \Exception("tunnel created");
         }
-        else if(empty($reservation))
+        else if(empty($reservation) && empty($tunnelData))
         {
             throw new \Exception("No active reservation"); 
         }

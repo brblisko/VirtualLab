@@ -6,7 +6,7 @@ services:
     - App\Models\ReservationFacade
     - App\Services\ApiService
     - App\Models\Authenticator
-
+    - App\Models\FileManager
 
 search:
 	-	in: %appDir%

@@ -24,6 +24,11 @@ final class ApiFacade
         return $this->apiService->filterTunnelsData($data, $userId);
     }
 
+    public function getTunnelsData()
+    {
+        $data = $this->apiService->getTunnelsData();
+        return $data;
+    }
 
     public function sendInstruction(string $fpgaIp, string $clientIp, string $userId, string $type)
     {

@@ -1,0 +1,30 @@
+{block content}
+    <h1>File Manager</h1>
+
+    {* {if $flashMessages}
+        {foreach $flashMessages as $flashMessage}
+            <div class="alert alert-{$flashMessage->type}">
+                {$flashMessage->message}
+            </div>
+        {/foreach}
+    {/if} *}
+
+    {control uploadForm}
+
+
+    <hr>
+
+    <h2>Files</h2>
+    {if $files}
+        <ul>
+            {foreach $files as $file}
+                <li>
+                    <a href="{link 'Filemanager:download', 'fileName' => $file}" download>{$file}</a>
+                    <a href="{link 'Filemanager:delete', $file}" class="btn btn-danger btn-sm">Delete</a>
+                </li>
+            {/foreach}
+        </ul>
+    {else}
+        <p>No files found.</p>
+    {/if}
+{/block}
