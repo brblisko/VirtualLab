@@ -3,8 +3,10 @@ namespace App\Models;
 
 use Nette;
 use Nette\Utils\Strings;
-use Nette\Http\FileResponse;
 use Nette\Http\Response;
+
+use GuzzleHttp\Client;
+use Nette\Application\Responses\FileResponse;
 
 class FileManager
 {
@@ -28,23 +30,17 @@ class FileManager
         $uploadedFile->move($destination);
     }
 
-    public function downloadFile($userId, $fileName)
-    {
+    public function getPath($userId, $fileName){
         $this->buildDir($userId);
         $filePath = realpath($this->userDirectory . $fileName);
 
-
-        // Check if the file exists
-        if (!file_exists($filePath)) {
-            throw new \RuntimeException("File '{$fileName}' does not exist.");
+        if (file_exists($filePath)) {
+            // Send the file as a response
+            return $filePath;
+        } else {
+            // Handle file not found error
+            return null;
         }
-
-        $response = new Response();
-        $response->setContentType('application/octet-stream'); // Set content type as binary data
-        $response->setHeader('Content-Disposition', 'attachment; filename="' . $filePath . '"');
-
-        // Send the file contents as response
-        return $response;
     }
 
     public function deleteFile($userId, $fileName)
@@ -61,18 +57,68 @@ class FileManager
         unlink($filePath);
     }
 
-    public function listFiles($userId)
+    public function listFiles($userId, $directory = '')
     {
         $this->buildDir($userId);
-        // List files in user directory
-        $files = scandir($this->userDirectory);
+        $currentDirectory = $this->userDirectory . $directory; // Remove extra slash
+        // List files and directories in user directory
+        $contents = scandir($currentDirectory);
         
         // Remove '.' and '..' from the list
-        $files = array_diff($files, array('.', '..'));
+        $contents = array_diff($contents, array('.', '..'));
+
+        // Prepare array to hold files and directories
+        $files = [];
+        foreach ($contents as $item) {
+            $path = $currentDirectory . '/' . $item; // Add slash for files/directories
+            $isDirectory = is_dir($path);
+            $files[] = [
+                'name' => $item,
+                'isDirectory' => $isDirectory,
+                'path' => $directory ? $directory . '/' . $item : $item, // Include directory path
+            ];
+            
+            // If item is a directory, recursively list its contents
+            if ($isDirectory) {
+                $subContents = $this->listFiles($userId, $directory ? $directory . '/' . $item : $item);
+                foreach ($subContents as $subItem) {
+                    $files[] = $subItem;
+                }
+            }
+        }
 
         return $files;
     }
 
+    public function deleteDirectory($userId, $dir) {
+        $this->buildDir($userId);
+
+        $dir = $this->userDirectory . $dir;
+
+        if (!is_dir($dir)) {
+            return false; // Directory doesn't exist
+        }
+        
+        // List the contents of the directory
+        $contents = scandir($dir);
+        
+        // Remove '.' and '..' from the list
+        $contents = array_diff($contents, array('.', '..'));
+        
+        // Recursively delete files and subdirectories
+        foreach ($contents as $item) {
+            $path = $dir . '/' . $item;
+            if (is_dir($path)) {
+                $this->deleteDirectory($userId, $path); // Recursively delete subdirectory
+            } else {
+                unlink($path); // Delete file
+            }
+        }
+        
+        // Finally, delete the directory itself
+        return rmdir($dir);
+    }
+    
     private function buildDir($userId)
     {
         $this->userDirectory = "../../UserData/" . (string) $userId . "/";

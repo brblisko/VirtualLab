@@ -1,30 +1,74 @@
+{extends '../@layout.latte'}
 {block content}
     <h1>File Manager</h1>
 
-    {* {if $flashMessages}
-        {foreach $flashMessages as $flashMessage}
-            <div class="alert alert-{$flashMessage->type}">
-                {$flashMessage->message}
-            </div>
-        {/foreach}
-    {/if} *}
+    {if $flashes}
+        <div class="flash-messages">
+            {foreach $flashes as $flash}
+                <div class="alert alert-{$flash->type}">
+                    {if is_string($flash->message)}
+                        {$flash->message}
+                    {else}
+                        {$flash->message|json_encode}
+                    {/if}
+                </div>
+            {/foreach}
+        </div>
+    {/if}
+
+
 
     {control uploadForm}
 
-
     <hr>
 
-    <h2>Files</h2>
-    {if $files}
-        <ul>
-            {foreach $files as $file}
-                <li>
-                    <a href="{link 'Filemanager:download', 'fileName' => $file}" download>{$file}</a>
-                    <a href="{link 'Filemanager:delete', $file}" class="btn btn-danger btn-sm">Delete</a>
-                </li>
-            {/foreach}
-        </ul>
-    {else}
-        <p>No files found.</p>
-    {/if}
+<h2>Files</h2>
+{if $contents}
+    <ul class="tree">
+        {foreach $contents as $item}
+           <li style="margin-left: {count(explode('/', $item['path'])) * 20}px;" {if $item['isDirectory']}class="directory"{/if}>
+                {if $item['isDirectory']}
+                    <strong>{$item['name']}</strong> <!-- Render directory name -->
+                    <a href="{link 'Filemanager:deleteDir', $item['path']}" class="btn btn-danger btn-sm">Delete</a>
+                {else}
+                    <a href="{link 'Filemanager:download', 'fileName' => $item['path']}" download>{$item['name']}</a> <!-- Render file name -->
+                    <a href="{link 'Filemanager:delete', $item['path']}" class="btn btn-danger btn-sm">Delete</a>
+                {/if}
+            </li>
+        {/foreach}
+    </ul>
+{else}
+    <p>No files or directories found.</p>
+{/if}
+{/block}
+
+{block scripts}
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const ul = document.querySelector('ul.tree'); // Assuming the <ul> has class 'tree'
+        const items = [...ul.children]; // Convert NodeList to Array
+
+        // Sort items based on their computed left position
+        items.sort((a, b) => {
+            const marginA = parseInt(window.getComputedStyle(a).marginLeft);
+            const marginB = parseInt(window.getComputedStyle(b).marginLeft);
+
+            // Check if one item is a directory and the other is not
+            const isDirA = a.classList.contains('directory');
+            const isDirB = b.classList.contains('directory');
+
+            // If only one item is a directory, move the non-directory in front
+            if (isDirA !== isDirB && marginA === marginB) {
+                return isDirA ? 1 : -1; // Move non-directory in front
+            }
+
+            
+
+            return marginA - marginB;
+        });
+
+        // Re-append sorted items
+        items.forEach(item => ul.appendChild(item));
+    });
+</script>
 {/block}

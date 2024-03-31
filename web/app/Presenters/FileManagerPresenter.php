@@ -5,6 +5,7 @@ namespace App\Presenters;
 use Nette;
 use App\Models\FileManager;
 use Nette\Application\UI\Form;
+use Nette\Application\Responses\FileResponse;
 
 class FileManagerPresenter extends DefaultPresenter
 {
@@ -19,11 +20,21 @@ class FileManagerPresenter extends DefaultPresenter
 
     public function renderFiles()
     {
-        // Get the list of files in the user's directory
-        $files = $this->fileManager->listFiles($this->getUser()->getId());
-        
-        // Pass the list of files to the template
-        $this->template->files = $files;
+    // Get the list of files and directories in the user's directory
+    $contents = $this->fileManager->listFiles($this->getUser()->getId());
+    
+    // Pass the list of files and directories to the template
+    $this->template->contents = $contents;
+    }
+
+    public function actionDeleteDir($dir)
+    {
+        if ($this->fileManager->deleteDirectory($this->getUser()->getId(), $dir)) {
+            $this->flashMessage('Directory deleted successfully.', 'success');
+        } else {
+            $this->flashMessage("Failed to delete directory", 'error');
+        }
+        $this->redirect('files');
     }
 
 
@@ -50,7 +61,8 @@ class FileManagerPresenter extends DefaultPresenter
             $this->fileManager->uploadFile($this->getUser()->getId(), $uploadedFile);
             $this->flashMessage('File uploaded successfully.', 'success');
         } catch (\Exception $e) {
-            $this->flashMessage('Failed to upload file: ' . $e->getMessage(), 'error');
+            $message ='Failed to upload file: ' . (string) $e->getMessage();
+            $this->flashMessage($message, 'error');
         }
 
         // Redirect back to the default action
@@ -59,16 +71,16 @@ class FileManagerPresenter extends DefaultPresenter
 
     public function actionDownload($fileName)
     {
-        try {
-            // Download the file
-            $response = $this->fileManager->downloadFile($this->getUser()->getId(), $fileName);
-            
-            $this->sendPayload($response);
-        } catch (\Exception $e) {
-            $this->flashMessage('Failed to download file: ' . $e->getMessage(), 'error');
-            // Redirect back to the default action
-            $this->redirect('files');
-        }
+            $filePath = $this->fileManager->getPath($this->getUser()->getId(), $fileName);
+
+            if($filePath !== null)
+            {
+                $this->sendResponse(new FileResponse($filePath));
+            }
+            else
+            {
+                $this->flashMessage('Failed to download file: The file is missing ', 'error');
+            }
     }
 
     public function actionDelete($fileName)
@@ -78,7 +90,8 @@ class FileManagerPresenter extends DefaultPresenter
             $this->fileManager->deleteFile($this->getUser()->getId(), $fileName);
             $this->flashMessage('File deleted successfully.', 'success');
         } catch (\Exception $e) {
-            $this->flashMessage('Failed to delete file: ' . $e->getMessage(), 'error');
+            $message = 'Failed to delete file: ' . $e->getMessage();
+            $this->flashMessage($message, 'error');
         }
 
         // Redirect back to the default action
