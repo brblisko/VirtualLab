@@ -103,9 +103,9 @@ final class ConnectionPresenter extends DefaultPresenter
     {
         parent::beforeRender();
 
-
+        
         $userId = $this->getUser()->getId();
-        $tunnelData = $this->facade->getTunnelsDataAndFilter((string) $this->getUser()->getId());
+        $tunnelData = $this->facade->getTunnelsDataAndFilter((string) $userId);
         $tmp = $this->res_facade->getLiveReservation($userId);
 
         $reservation = [];

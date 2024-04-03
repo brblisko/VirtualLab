@@ -26,7 +26,7 @@
 {if $contents}
     <ul class="tree">
         {foreach $contents as $item}
-           <li style="margin-left: {count(explode('/', $item['path'])) * 20}px;" {if $item['isDirectory']}class="directory"{/if}>
+           <li {if $item['isDirectory']}class="directory"{/if} path={$item['path']}>
                 {if $item['isDirectory']}
                     <strong>{$item['name']}</strong> <!-- Render directory name -->
                     <a href="{link 'Filemanager:deleteDir', $item['path']}" class="btn btn-danger btn-sm">Delete</a>
@@ -45,30 +45,73 @@
 {block scripts}
 <script>
     window.addEventListener('DOMContentLoaded', () => {
-        const ul = document.querySelector('ul.tree'); // Assuming the <ul> has class 'tree'
-        const items = [...ul.children]; // Convert NodeList to Array
-
-        // Sort items based on their computed left position
-        items.sort((a, b) => {
-            const marginA = parseInt(window.getComputedStyle(a).marginLeft);
-            const marginB = parseInt(window.getComputedStyle(b).marginLeft);
-
-            // Check if one item is a directory and the other is not
-            const isDirA = a.classList.contains('directory');
-            const isDirB = b.classList.contains('directory');
-
-            // If only one item is a directory, move the non-directory in front
-            if (isDirA !== isDirB && marginA === marginB) {
-                return isDirA ? 1 : -1; // Move non-directory in front
-            }
-
-            
-
-            return marginA - marginB;
-        });
-
-        // Re-append sorted items
-        items.forEach(item => ul.appendChild(item));
+        moveListItems();
+        adjustLeftMargin();
     });
+
+    function moveListItems() {
+        // Select the tree ul element
+        var tree = document.querySelector('ul.tree');
+        
+        // Select all list items within the tree
+        var listItems = tree.querySelectorAll('li');
+        
+        // Sort list items based on their paths
+        var sortedListItems = Array.from(listItems).sort(function(a, b) {
+            var pathA = a.getAttribute('path');
+            var pathB = b.getAttribute('path');
+            return pathA.localeCompare(pathB);
+        });
+        
+        // Reorder list items based on the paths hierarchy
+        sortedListItems.forEach(function(item) {
+            // Check if the item is a directory
+            if (item.classList.contains('directory')) {
+                // Get the path of the directory
+                var directoryPath = item.getAttribute('path');
+                
+                // Select children files without class directory
+                var childrenFiles = sortedListItems.filter(function(childItem) {
+                    return childItem !== item && 
+                        !childItem.classList.contains('directory') && 
+                        childItem.getAttribute('path').startsWith(directoryPath + '/');
+                });
+                
+                // Select children directories
+                var childrenDirectories = sortedListItems.filter(function(childItem) {
+                    return childItem !== item && 
+                        childItem.classList.contains('directory') && 
+                        childItem.getAttribute('path').startsWith(directoryPath + '/');
+                });
+                
+                // Reorder the items
+                var reorderedChildren = childrenFiles.concat(childrenDirectories);
+                reorderedChildren.forEach(function(child) {
+                    item.appendChild(child);
+                });
+            }
+        });
+    }
+
+    function adjustLeftMargin() {
+        // Select the tree ul element
+        var tree = document.querySelector('ul.tree');
+        
+        // Select all list items within the tree
+        var listItems = tree.querySelectorAll('li');
+        
+        // Loop through each list item
+        listItems.forEach(function(item) {
+            // Get the path of the current item
+            var path = item.getAttribute('path');
+            
+            // Count the number of "/" characters in the path
+            var depth = (path.match(/\//g) || []).length;
+            
+            // Set the left margin based on the depth
+            var marginLeft = depth * 10; // 20px for each "/"
+            item.style.marginLeft = marginLeft + 'px';
+        });
+    }
 </script>
 {/block}
