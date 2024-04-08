@@ -66,6 +66,17 @@
               <a n:href="Reservation:table" class="nav-link">Reservations</a>
             </li>
 
+            {if in_array('admin', $user->getRoles())}
+              <li class="nav-item">
+                <a n:href="Admin:default" class="nav-link">Admin Panel</a>
+              </li>
+            {/if}
+
+
+            <li class="nav-item">
+              <a n:href="Filemanager:files" class="nav-link">File Manager</a>
+            </li>
+
             <li class="nav-item">
               <a n:href="Sign:out" class="nav-link">Log out</a>
             </li>

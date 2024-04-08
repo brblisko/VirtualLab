@@ -1,4 +1,11 @@
+{extends '../@layout.latte'}
 {block content}
+
+    {if $flashes}
+        <div n:foreach="$flashes as $flash" n:class="alert, 'alert-' . $flash->type">{$flash->message}</div>
+    {/if}
+
+
     <h1 n:block="title">{$message}</h1>
     {foreach $reservations as $reservation}
     <div>
@@ -16,7 +23,4 @@
 
     </div>
     {/foreach}
-
-
-
 {/block}

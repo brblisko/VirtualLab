@@ -1,1 +1,6 @@
 Require all denied
+
+RewriteEngine On
+
+# Rewrite filemanager requests to the KCFinder vendor directory
+RewriteRule ^filemanager/(.*)$ /vendor/kcfinder-3.12/$1 [L]

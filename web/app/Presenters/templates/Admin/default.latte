@@ -1,0 +1,82 @@
+{extends '../@layout.latte'}
+{block content}
+<h2>User Reservations</h2>
+<div id="reservationContainer"></div>
+{/block}
+
+{block scripts}
+<script>
+function fetchAndDisplayTimeSlots() {
+         fetch('/admin/timeslots')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('reservationContainer');
+                container.innerHTML = '';
+
+                data.forEach(timeSlot => {
+                    const timeslotDiv = document.createElement('div');
+                    timeslotDiv.className = 'timeslot';
+                    
+                    const header = document.createElement('h4');
+                    header.textContent = 'Timeslot: ' + timeSlot.timeslot;
+                    timeslotDiv.appendChild(header);
+                    
+                    if (timeSlot.userDetails && timeSlot.userDetails.length > 0) {
+                        const userList = document.createElement('ul');
+                        
+                        timeSlot.userDetails.forEach(detail => {
+                            const item = document.createElement('li');
+                            item.textContent = detail.username + ' (ID: ' + detail.user_id + ')';
+                            
+                            const deleteButton = document.createElement('button');
+                            deleteButton.textContent = 'Delete';
+                            deleteButton.onclick = function() {
+                                deleteReservation(detail.user_id, timeSlot.timeslot);
+                            };
+                            item.appendChild(deleteButton);
+                            
+                            userList.appendChild(item);
+                        });
+                        
+                        timeslotDiv.appendChild(userList);
+                    } else {
+                        const noReservations = document.createElement('p');
+                        noReservations.textContent = 'No reservations for this timeslot.';
+                        timeslotDiv.appendChild(noReservations);
+                    }
+                    
+                    container.appendChild(timeslotDiv);
+                });
+            });
+    }
+
+function deleteReservation(userId, timestamp) {
+        fetch('/admin/delete-reservation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                userId: userId, 
+                timestamp: timestamp 
+                }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message); 
+                fetchAndDisplayTimeSlots(); 
+            } else {
+                alert(data.message); 
+            }
+        })
+        .catch(error => console.error('Error deleting reservation:', error));
+    }
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetchAndDisplayTimeSlots();
+    
+});
+
+</script>
+{/block}

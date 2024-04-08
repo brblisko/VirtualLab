@@ -35,6 +35,16 @@ class Authenticator implements Nette\Security\Authenticator
             throw new Nette\Security\AuthenticationException('Invalid Password.');
         }
 
+
+        if ($row->username === "admin") 
+        {
+            return new SimpleIdentity(
+                $row->id,
+                "admin",
+                ['username' => $row->username]
+            );
+        }
+
         return new SimpleIdentity(
             $row->id,
             null,

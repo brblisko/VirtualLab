@@ -73,4 +73,45 @@ final class ReservationFacade
         ]);
     }
 
+
+    public function getFutureReservationsGroupedByTimestamp(): array
+    {
+        $reservations = $this->database->table('reservations')
+            ->where('time > ?', new \DateTime()) // Filter for future reservations
+            ->order('time ASC') // Ensure they are sorted by timestamp
+            ->fetchAll();
+
+        $groupedReservations = [];
+        foreach ($reservations as $reservation) {
+            $timestamp = $reservation->time->format('Y-m-d H:i:s');
+            $userId = $reservation->user_id;
+
+            // Fetch username for each reservation
+            $username = $this->getUsernameByUserId($userId);
+
+            // Group by timestamp
+            if (!isset($groupedReservations[$timestamp])) {
+                $groupedReservations[$timestamp] = [];
+            }
+
+            $groupedReservations[$timestamp][] = [
+                'user_id' => $userId,
+                'username' => $username,
+            ];
+        }
+
+        return $groupedReservations;
+    }
+
+    
+    private function getUsernameByUserId(int $userId): ?string
+    {
+        $user = $this->database->table('users')
+            ->select('username')
+            ->where('id', $userId)
+            ->fetch();
+
+        return $user ? $user->username : null;
+    }
+
 }

@@ -30,13 +30,12 @@ class FileManagerPresenter extends DefaultPresenter
     public function actionDeleteDir($dir)
     {
         if ($this->fileManager->deleteDirectory($this->getUser()->getId(), $dir)) {
-            $this->flashMessage('Directory deleted successfully.', 'success');
+            $this->flashMessage('Directory: "' . $dir .  '" deleted successfully.', 'success');
         } else {
             $this->flashMessage("Failed to delete directory", 'error');
         }
         $this->redirect('files');
     }
-
 
     public function createComponentUploadForm()
     {
@@ -69,6 +68,28 @@ class FileManagerPresenter extends DefaultPresenter
         $this->redirect('files');
     }
 
+
+    public function actionDownloadDir($path)
+    {
+        $tempZip = $this->fileManager->downloadDir($this->getUser()->getId(), $path);
+
+
+        if ($tempZip && file_exists($tempZip)) {
+            $response = new FileResponse($tempZip, "archive.zip", 'application/zip', true);
+            $this->sendResponse($response);
+        } 
+        else if (!file_exists($tempZip))
+        {
+            $this->flashMessage('Could not create an archive from an empty directory.', 'error');
+            $this->redirect('files');
+        }
+        else {
+            $this->flashMessage("Could not create zip archive.", 'error');
+            $this->redirect('files');
+        }
+
+    }
+
     public function actionDownload($fileName)
     {
             $filePath = $this->fileManager->getPath($this->getUser()->getId(), $fileName);
@@ -88,7 +109,7 @@ class FileManagerPresenter extends DefaultPresenter
         try {
             // Delete the file
             $this->fileManager->deleteFile($this->getUser()->getId(), $fileName);
-            $this->flashMessage('File deleted successfully.', 'success');
+            $this->flashMessage('File: "' . $fileName .  '" deleted successfully.', 'success');
         } catch (\Exception $e) {
             $message = 'Failed to delete file: ' . $e->getMessage();
             $this->flashMessage($message, 'error');

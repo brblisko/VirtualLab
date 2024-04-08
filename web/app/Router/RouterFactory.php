@@ -18,9 +18,6 @@ final class RouterFactory
 	{
 		$router = new RouteList;
 
-		$router[] = new Route('filemanager/download/<fileName>', 'FileManager:download');
-
-
 		$router->addRoute('<presenter>/<action>[/<id>]', 'Home:default');
 		return $router;
 	}

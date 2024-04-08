@@ -3,17 +3,9 @@
     <h1>File Manager</h1>
 
     {if $flashes}
-        <div class="flash-messages">
-            {foreach $flashes as $flash}
-                <div class="alert alert-{$flash->type}">
-                    {if is_string($flash->message)}
-                        {$flash->message}
-                    {else}
-                        {$flash->message|json_encode}
-                    {/if}
-                </div>
-            {/foreach}
-        </div>
+    <div class="alert-container">
+        <div n:foreach="$flashes as $flash" n:class="alert, 'alert-' . $flash->type">{$flash->message}</div>
+    </div>
     {/if}
 
 
@@ -23,16 +15,23 @@
     <hr>
 
 <h2>Files</h2>
+<button data-download-url="{link 'Filemanager:downloadDir', ""}" class="downloadButton">🔽 Download All Files</button>
 {if $contents}
     <ul class="tree">
         {foreach $contents as $item}
-           <li {if $item['isDirectory']}class="directory"{/if} path={$item['path']}>
+           <li {if $item['isDirectory']}class="directory" {else} class="file"{/if} path={$item['path']}>
                 {if $item['isDirectory']}
-                    <strong>{$item['name']}</strong> <!-- Render directory name -->
-                    <a href="{link 'Filemanager:deleteDir', $item['path']}" class="btn btn-danger btn-sm">Delete</a>
+                    <span class="name"> <strong>{$item['path']}</strong> </span>
+                    <div class="actions">
+                    <button data-delete-url="{link 'Filemanager:deleteDir', $item['path']}" class="deleteButton">❌ Delete Directory "{$item['path']}"</button>
+                    <button data-download-url="{link 'Filemanager:downloadDir', $item['path']}" class="downloadButton">🔽 Download Directory "{$item['path']}"</button>
+                    </div>
                 {else}
-                    <a href="{link 'Filemanager:download', 'fileName' => $item['path']}" download>{$item['name']}</a> <!-- Render file name -->
-                    <a href="{link 'Filemanager:delete', $item['path']}" class="btn btn-danger btn-sm">Delete</a>
+                    <span class="name"><a >{$item['name']}</a> </span>
+                    <div class="actions">
+                    <button data-delete-url="{link 'Filemanager:delete', $item['path']}" class="deleteButton">❌ Delete File "{$item['path']}"</button>
+                    <button data-download-url="{link 'Filemanager:download', 'fileName' => $item['path']}" class="downloadButton">🔽 Download File "{$item['path']}"</button>
+                    </div>
                 {/if}
             </li>
         {/foreach}
@@ -44,7 +43,40 @@
 
 {block scripts}
 <script>
+
+    function fixDelButtons()
+    {
+        const buttons = document.querySelectorAll('.deleteButton');
+
+        buttons.forEach(button => {
+            button.onclick = function() {
+                const url = button.getAttribute('data-delete-url');
+
+                
+                window.location.href = url;
+            }
+        });
+    }
+
+    function fixDownloadButtons()
+    {
+        const buttons = document.querySelectorAll('.downloadButton');
+
+        buttons.forEach(button => {
+            button.onclick = function() {
+                const url = button.getAttribute('data-download-url');
+
+                
+                window.location.href = url;
+            }
+        });
+    }
+
+
     window.addEventListener('DOMContentLoaded', () => {
+        fixDelButtons();
+        fixDownloadButtons();
+        
         moveListItems();
         adjustLeftMargin();
     });
@@ -115,3 +147,6 @@
     }
 </script>
 {/block}
+
+
+

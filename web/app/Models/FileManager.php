@@ -4,6 +4,9 @@ namespace App\Models;
 use Nette;
 use Nette\Utils\Strings;
 use Nette\Http\Response;
+use ZipArchive;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 use GuzzleHttp\Client;
 use Nette\Application\Responses\FileResponse;
@@ -41,6 +44,49 @@ class FileManager
             // Handle file not found error
             return null;
         }
+    }
+
+    public function downloadDir($userId, $path)
+    {
+        $this->buildDir($userId);
+        $sourceDir = $this->userDirectory . $path;
+
+        if (!extension_loaded('zip') || !file_exists($sourceDir)) {
+            return false; // Make sure the zip extension is loaded and source directory exists
+        }
+
+        // Create a temporary file
+        $tempFile = tempnam(sys_get_temp_dir(), 'zip');
+        unlink($tempFile); // Delete the file immediately after creating it
+        
+        
+        $zip = new ZipArchive();
+        if ($zip->open($tempFile, ZipArchive::CREATE) !== TRUE) {
+            return false; // Unable to create the zip file
+        }
+        
+        $sourceDir = realpath($sourceDir);
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($sourceDir, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            // Generate the relative path for the item
+            $relativePath = substr($item->getRealPath(), strlen($sourceDir) + 1);
+        
+            if ($item->isDir()) {
+                // Add the directory to the zip file
+                $zip->addEmptyDir($relativePath);
+            } else {
+                // Add the file to the zip file
+                $zip->addFile($item->getRealPath(), $relativePath);
+            }
+        }
+    
+        // Zip archive will be created only after closing object
+        $zip->close();
+        return $tempFile;
     }
 
     public function deleteFile($userId, $fileName)
