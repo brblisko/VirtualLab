@@ -6,6 +6,9 @@ namespace App\Presenters;
 
 use Nette\Utils\DateTime;
 use App\Models\ReservationFacade;
+use Nette\Application\UI\Form;
+use Nette\Application\Responses\FileResponse;
+use App\Models\Authenticator;
 use Nette;
 
 
@@ -17,10 +20,12 @@ use Nette\Application\Responses\TextResponse;
 final class AdminPresenter extends DefaultPresenter
 {
     private $facade;
+    private $authenticator;
     
-    public function __construct(ReservationFacade $facade)
+    public function __construct(ReservationFacade $facade, Authenticator $authenticator)
     {
         $this->facade = $facade;
+        $this->authenticator = $authenticator;
     }
 
     
@@ -48,6 +53,71 @@ final class AdminPresenter extends DefaultPresenter
         }
     }
 
+
+    public function createComponentUploadForm()
+    {
+    $form = new Form();
+    $form->addUpload('uploadedFile', 'Upload File:')
+        ->setRequired('Please select a file to upload.')
+        ->addRule(function ($fileControl) {
+            $file = $fileControl->getValue();
+            if (!$file->isOk()) {
+                return false;
+            }
+            $fileExtension = strtolower(pathinfo($file->getName(), PATHINFO_EXTENSION));
+            return $fileExtension === 'csv';
+        }, 'Only CSV files are allowed.');
+
+    $form->addSubmit('submit', 'Upload');
+
+    $form->onSuccess[] = function (Form $form, $values) {
+        $this->actionUpload($values->uploadedFile);
+    };
+
+    return $form;
+    }
+
+    private function  actionUpload($uFile)
+    {
+        // Define the path for the new CSV file
+        $newFilePath = '../../UserData/' . (string) $this->getUser()->getId() . '/UserPasswords.csv';
+            
+        // Open the uploaded file for reading
+        if (($handle = fopen($uFile->getTemporaryFile(), 'r')) !== FALSE) {
+            // Open the new file for writing
+            $newFile = fopen($newFilePath, 'w');
+            
+            // Loop through each row in the uploaded CSV
+            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                $username = $data[0];
+                
+                // Generate a random 16-character password
+                $password = bin2hex(random_bytes(8)); // 8 bytes = 16 characters in hex
+                
+                $success = true;
+
+                try {
+                    $this->authenticator->createUser($username, $password);
+                } catch (\PDOException $e) {
+                    $success = false;
+                }
+
+                // Write the username and password pair to the new CSV file
+                fputcsv($newFile, [$username, $password, $success], ',');
+            }
+            
+            // Close the file handlers
+            fclose($handle);
+            fclose($newFile);
+            
+            $this->flashMessage('File with user passwords is avaliable in your filemanager.', 'success');
+
+            // do you want dirrect download???
+            // $this->sendResponse(new FileResponse($newFilePath));
+        } else {
+            $this->flashMessage('Could not create a file with user passwords', 'error');
+        }
+    }
 
 
     public function actionDebug() {

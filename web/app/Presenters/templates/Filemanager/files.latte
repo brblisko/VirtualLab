@@ -78,7 +78,6 @@
         fixDownloadButtons();
         
         moveListItems();
-        adjustLeftMargin();
     });
 
     function moveListItems() {
@@ -122,27 +121,6 @@
                     item.appendChild(child);
                 });
             }
-        });
-    }
-
-    function adjustLeftMargin() {
-        // Select the tree ul element
-        var tree = document.querySelector('ul.tree');
-        
-        // Select all list items within the tree
-        var listItems = tree.querySelectorAll('li');
-        
-        // Loop through each list item
-        listItems.forEach(function(item) {
-            // Get the path of the current item
-            var path = item.getAttribute('path');
-            
-            // Count the number of "/" characters in the path
-            var depth = (path.match(/\//g) || []).length;
-            
-            // Set the left margin based on the depth
-            var marginLeft = depth * 10; // 20px for each "/"
-            item.style.marginLeft = marginLeft + 'px';
         });
     }
 </script>

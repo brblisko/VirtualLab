@@ -1,5 +1,18 @@
 {extends '../@layout.latte'}
 {block content}
+{if $flashes}
+    <div class="alert-container">
+        <div n:foreach="$flashes as $flash" n:class="alert, 'alert-' . $flash->type">{$flash->message}</div>
+    </div>
+{/if}
+
+
+<h2>Upload Users</h2>
+
+{control uploadForm}
+
+<hr>
+
 <h2>User Reservations</h2>
 <div id="reservationContainer"></div>
 {/block}
