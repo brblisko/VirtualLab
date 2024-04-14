@@ -21,6 +21,11 @@ type Instruction struct {
 	User     string `json:"user"`
 }
 
+type State struct {
+	FPGAIP string `json:"fpgaip"`
+	State  string `json:"state"`
+}
+
 type ErrorInternal struct {
 	ErrorCode int    `json:"errorcode"`
 	Message   string `json:"message"`

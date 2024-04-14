@@ -149,3 +149,13 @@ ul.tree li.file::before {
 .alert-container {
   text-align: center;
 }
+
+.headerContainer {
+  display: flex;
+  align-items: center;
+}
+
+.headerTextContainer {
+  flex-grow: 1;
+  max-width: 15%;
+}

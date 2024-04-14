@@ -8,6 +8,7 @@ use Nette\Utils\DateTime;
 use App\Models\ReservationFacade;
 use Nette\Application\UI\Form;
 use Nette\Application\Responses\FileResponse;
+use App\Models\ApiFacade;
 use App\Models\Authenticator;
 use Nette;
 
@@ -21,11 +22,13 @@ final class AdminPresenter extends DefaultPresenter
 {
     private $facade;
     private $authenticator;
+    private $api_facade;
     
-    public function __construct(ReservationFacade $facade, Authenticator $authenticator)
+    public function __construct(ReservationFacade $facade, Authenticator $authenticator, ApiFacade $api_facade)
     {
         $this->facade = $facade;
         $this->authenticator = $authenticator;
+        $this->api_facade = $api_facade;
     }
 
     
@@ -36,7 +39,7 @@ final class AdminPresenter extends DefaultPresenter
         
         
         
-        // // Enable Tracy and set output mode to debug
+        // Enable Tracy and set output mode to debug
             // Debugger::enable(Debugger::DETECT, '/home/boris/shared/web/log', 'debug');
     
             // $outputDebugger = new OutputDebugger();
@@ -53,6 +56,33 @@ final class AdminPresenter extends DefaultPresenter
         }
     }
 
+
+    public function actionFPGAs()
+    {
+        $FPGAs = $this->api_facade->getFpgaInfo();
+        $tunnels = $this->api_facade->getTunnelsData();
+
+        foreach ($FPGAs as &$FPGA) 
+        {
+            $matchingFPGA = null;
+            foreach ($tunnels as $tunnel) {
+                if ($tunnel['fpgaip'] === $FPGA['ip']) {
+                    $tunnel['username'] = $this->facade->getUsernameByUserId((int) $tunnel['user']);
+                    $matchingFPGA = $tunnel;
+                    break;
+                }
+            }
+            
+            if ($matchingFPGA !== null) {
+                $FPGA['tunnel'] = $matchingFPGA; 
+            } else {
+                $FPGA['tunnel'] = []; 
+            }
+        }
+        
+
+        $this->sendJson($FPGAs);
+    }
 
     public function createComponentUploadForm()
     {
@@ -150,7 +180,7 @@ final class AdminPresenter extends DefaultPresenter
             ];
         }
 
-        $output = var_export($timeSlots, true);
+        $output = var_export($groupedReservations, true);
         $this->sendResponse(new TextResponse($output));
     }
 
@@ -190,9 +220,9 @@ final class AdminPresenter extends DefaultPresenter
 
 
     public function actionTimeslots()
-{
-    $timeSlots = $this->generateTimeSlots();
-        
+    {
+        $timeSlots = $this->generateTimeSlots();
+
         $groupedReservations = $this->facade->getFutureReservationsGroupedByTimestamp();
         
         foreach ($timeSlots as $index => $dateTime) {
@@ -218,9 +248,9 @@ final class AdminPresenter extends DefaultPresenter
                 'userDetails' => $userDetails,
             ];
         }
-    
-    $this->sendJson($timeSlots);
-}
+
+        $this->sendJson($timeSlots);
+    }
 
     public function actionDeleteReservation()
     {
@@ -245,6 +275,112 @@ final class AdminPresenter extends DefaultPresenter
 
     }
 
+    public function actionDisableFPGA()
+    {
+        $requestData = json_decode($this->getHttpRequest()->getRawBody(), true);
+        $ip = $requestData['ip'];
+
+        $logData = [
+            'deleted_tunnels' => [],
+            'deleted_reservations' => []
+        ];
+
+        
+        $tunnels = $this->api_facade->getTunnelsData();
+        
+        foreach ($tunnels as $tunnel) {
+            if ($tunnel['fpgaip'] === $ip) {
+                $result = $this->api_facade->sendInstruction($tunnel['fpgaip'], $tunnel['clientip'], $tunnel['user'], "DELETE");
+
+                if(!$result)
+                {
+                    $this->sendJson(['success' => false, 'message' => 'Failed to delete a tunnel. userId: ' . $tunnel['user'] . ' clientip: ' . $tunnel['clientip']]);
+                    return;
+                }
+                $logData['deleted_tunnels'][] = $tunnel;
+                break;
+            }
+        }
+        $response = $this->api_facade->setState($ip, "DISABLED");
+
+
+        $groupedReservations = $this->facade->getFutureReservationsGroupedByTimestamp();
+
+        $maxPYNQs = $this->api_facade->getAllFpgaCount();
+        foreach ($groupedReservations as $dateTime => $users) {
+            $numberOfUsers = count($users);
+            if ($numberOfUsers > $maxPYNQs)
+            {
+                $result = $this->facade->deleteReservation($users[0]['user_id'], $dateTime);
+
+                if (!$result)
+                {
+                    $this->sendJson(['success' => false, 'message' => 'Failed to delete reservation. userId: ' . $users[0]->user_id . ' timestamp: ' . $dateTime]);
+                    return;
+                }
+
+                $logData['deleted_reservations'][] = [
+                    'username' => $users[0]['username'],
+                    'user_id' => $users[0]['user_id'],
+                    'timestamp' => $dateTime
+                ];
+            }
+        }
+
+        $this->logActivity($logData);
+
+        if ($response)
+        {
+            $this->sendJson(['success' => true, 'message' => 'FPGA with ip: ' . $ip . ' disabled successfully. All deleted reservations and cancelled tunnels are avaliable in File Manager']);
+        }
+        else
+        {
+            $this->sendJson(['success' => false, 'message' => 'Error disabling FPGA: ' . $ip]);
+        }
+    }
+
+    private function logActivity($logData)
+    {
+        $timestamp = date('Y-m-d H:i:s');
+
+        $jsonData = json_encode([
+            'timeOfDeletion' => $timestamp,
+            'data' => $logData
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        if ($jsonData === false) {
+            $jsonData = "JSON encode error: " . json_last_error_msg();
+        }
+
+        $jsonData .= "\n";
+
+        $directoryPath = '../../UserData/' . (string) $this->getUser()->getId();
+        if (!is_dir($directoryPath)) {
+            mkdir($directoryPath, 0777, true);
+        }
+
+        $filePath = $directoryPath . '/log.txt';
+
+
+        file_put_contents($filePath, $jsonData, FILE_APPEND);
+    }
+
+    public function actionEnableFPGA()
+    {
+        $requestData = json_decode($this->getHttpRequest()->getRawBody(), true);
+        $ip = $requestData['ip'];
+
+        $response = $this->api_facade->setState($ip, "DEFAULT");
+
+        if ($response)
+        {
+            $this->sendJson(['success' => true, 'message' => 'FPGA with ip: ' . $ip . ' enabled successfully.']);
+        }
+        else
+        {
+            $this->sendJson(['success' => false, 'message' => 'Error enabling FPGA: ' . $ip]);
+        }
+    }
 
     private function generateTimeSlots()
     {

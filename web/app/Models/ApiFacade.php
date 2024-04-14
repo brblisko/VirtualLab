@@ -45,11 +45,30 @@ final class ApiFacade
 
         $statusCode = $response->getStatusCode();
         if ($statusCode === 200) {
-            echo 'Request was successful.';
+            return true;
         } else {
-            echo 'Request failed with status code: ' . $statusCode;
+            return false;
         }
 
+    }
+
+    public function setState(string $fpgaIp, string $state)
+    {
+        $payload = [
+            'json' => [
+                'fpgaip' => $fpgaIp,
+                'state' => $state
+            ]
+        ];
+
+        $response = $this->httpClient->post('http://localhost:20000/State', $payload);
+
+        $statusCode = $response->getStatusCode();
+        if ($statusCode === 200) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function getFpgaInfo()
@@ -65,7 +84,7 @@ final class ApiFacade
         $count = 0;
         foreach ($data as $item)
         {
-            if($item['state'] !== 'UNAVAILABLE')
+            if($item['state'] !== 'DISABLED')
             {
                 $count++;
             }

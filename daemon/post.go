@@ -250,3 +250,19 @@ func postInstruction(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, instruction)
 }
+
+func postState(c *gin.Context) {
+	var state State
+
+	if err := c.BindJSON(&state); err != nil {
+		return
+	}
+
+	for i := 0; i < len(FPGAs); i++ {
+		if FPGAs[i].IP == state.FPGAIP {
+			FPGAs[i].State = state.State
+		}
+	}
+
+	c.JSON(http.StatusOK, state)
+}

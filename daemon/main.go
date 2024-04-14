@@ -38,6 +38,7 @@ func main() {
 	router.GET("/FPGAs", getFPGAs)
 	router.GET("/Tunnels", getTunnels)
 	router.POST("/Instruction", postInstruction)
+	router.POST("/State", postState)
 
 	router.Run("localhost:20000")
 }

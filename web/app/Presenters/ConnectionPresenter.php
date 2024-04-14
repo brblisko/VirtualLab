@@ -80,6 +80,8 @@ final class ConnectionPresenter extends DefaultPresenter
         if($fpga === null)
         {
             // throw new \Exception("no fpga");
+
+            // TODO
             $tunnels = $this->facade->getTunnelsData();
             foreach($tunnels as $item)
             {

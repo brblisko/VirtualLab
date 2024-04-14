@@ -13,82 +13,226 @@
 
 <hr>
 
+<h2>Manage PYNQs</h2>
+<div id="pynqContainter"></div>
+
+<hr>
+
 <h2>User Reservations</h2>
 <div id="reservationContainer"></div>
 {/block}
 
 {block scripts}
 <script>
-function fetchAndDisplayTimeSlots() {
-         fetch('/admin/timeslots')
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('reservationContainer');
-                container.innerHTML = '';
+function fetchAndDisplayPYNQs()
+{
+    fetch('/admin/fpgas')
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('pynqContainter');
+        container.innerHTML = '';
 
-                data.forEach(timeSlot => {
-                    const timeslotDiv = document.createElement('div');
-                    timeslotDiv.className = 'timeslot';
+        data.forEach(FPGA =>{
+            const fpgaDiv = document.createElement('div');
+            fpgaDiv.className = 'FPGA';
+
+            const headerContainer = document.createElement('div');
+            headerContainer.className = 'headerContainer';
+
+            const headerTextContainer = document.createElement('div');
+            headerTextContainer.className = 'headerTextContainer'; // Apply CSS class for controlled width
+
+            const header = document.createElement('h4');
+            header.textContent = 'PYNQ: ' + FPGA.ip;
+            headerTextContainer.appendChild(header); // Add header to the text container
+
+            const button = document.createElement('button');
+
+            if(FPGA.state === "DISABLED")
+            {
+                button.textContent = 'Enable';
+                button.className = 'fpgaButton';
+                button.onclick = function() {
+                            enableFPGA(FPGA.ip);
+                };
+                button.style.backgroundColor = 'lightgreen';
+            }
+            else
+            {
+                button.textContent = 'Disable';
+                button.className = 'fpgaButton';
+                button.onclick = function() {
+                            disableFPGA(FPGA.ip);
+                };
+                button.style.backgroundColor = 'lightcoral';
+            }
+
+
+            headerContainer.appendChild(headerTextContainer);
+            headerContainer.appendChild(button);
+
+            fpgaDiv.appendChild(headerContainer);
+
+            const fpgaInfoList = document.createElement('ul');
+
+            const item = document.createElement('li');
+            item.textContent = 'State: ' + FPGA.state;
+            fpgaInfoList.appendChild(item);
+
+
+            if (FPGA.tunnel && Object.keys(FPGA.tunnel).length > 0)
+            {
+                const tunnelItem = document.createElement('li');
+                tunnelItem.textContent = 'Tunnel Info:';
+                fpgaInfoList.appendChild(tunnelItem);
+
+                const tunnelItemData = document.createElement('ul');
+
+                const clientIp = document.createElement('li');
+                clientIp.textContent = 'Client IP: ' + FPGA.tunnel.clientip;
+                tunnelItemData.appendChild(clientIp);
+
+
+                const username = document.createElement('li');
+                username.textContent = 'User: ' + FPGA.tunnel.username + ' (ID: ' + FPGA.tunnel.user + ')';
+                tunnelItemData.appendChild(username);
+
+
+                fpgaInfoList.appendChild(tunnelItemData);
+            }
+
+            fpgaDiv.appendChild(fpgaInfoList);
+
+
+            container.appendChild(fpgaDiv);
+        });
+    });
+}
+
+
+
+function fetchAndDisplayTimeSlots() {
+    fetch('/admin/timeslots')
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('reservationContainer');
+        container.innerHTML = '';
+
+        data.forEach(timeSlot => {
+            const timeslotDiv = document.createElement('div');
+            timeslotDiv.className = 'timeslot';
+            
+            const header = document.createElement('h4');
+            header.textContent = 'Timeslot: ' + timeSlot.timeslot;
+            timeslotDiv.appendChild(header);
+            
+            if (timeSlot.userDetails && timeSlot.userDetails.length > 0) {
+                const userList = document.createElement('ul');
+                
+                timeSlot.userDetails.forEach(detail => {
+                    const item = document.createElement('li');
+                    item.textContent = detail.username + ' (ID: ' + detail.user_id + ')';
                     
-                    const header = document.createElement('h4');
-                    header.textContent = 'Timeslot: ' + timeSlot.timeslot;
-                    timeslotDiv.appendChild(header);
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.onclick = function() {
+                        deleteReservation(detail.user_id, timeSlot.timeslot);
+                    };
+                    item.appendChild(deleteButton);
                     
-                    if (timeSlot.userDetails && timeSlot.userDetails.length > 0) {
-                        const userList = document.createElement('ul');
-                        
-                        timeSlot.userDetails.forEach(detail => {
-                            const item = document.createElement('li');
-                            item.textContent = detail.username + ' (ID: ' + detail.user_id + ')';
-                            
-                            const deleteButton = document.createElement('button');
-                            deleteButton.textContent = 'Delete';
-                            deleteButton.onclick = function() {
-                                deleteReservation(detail.user_id, timeSlot.timeslot);
-                            };
-                            item.appendChild(deleteButton);
-                            
-                            userList.appendChild(item);
-                        });
-                        
-                        timeslotDiv.appendChild(userList);
-                    } else {
-                        const noReservations = document.createElement('p');
-                        noReservations.textContent = 'No reservations for this timeslot.';
-                        timeslotDiv.appendChild(noReservations);
-                    }
-                    
-                    container.appendChild(timeslotDiv);
+                    userList.appendChild(item);
                 });
-            });
-    }
+                
+                timeslotDiv.appendChild(userList);
+            } else {
+                const noReservations = document.createElement('p');
+                noReservations.textContent = 'No reservations for this timeslot.';
+                timeslotDiv.appendChild(noReservations);
+            }
+            
+            container.appendChild(timeslotDiv);
+        });
+    });
+}
+
+
+function disableFPGA(ip)
+{
+    console.log("vypinam: " + ip);
+
+    fetch('/admin/disablefpga', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+        ip: ip
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message); 
+            fetchAndDisplayPYNQs();
+            fetchAndDisplayTimeSlots();
+        } else {
+            alert(data.message); 
+        }
+    })
+    .catch(error => console.error('Error disabling FPGA:', error));
+}
+
+function enableFPGA(ip)
+{
+    console.log("zapinam: " + ip);
+
+    fetch('/admin/enablefpga', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+        ip: ip
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message); 
+            fetchAndDisplayPYNQs(); 
+        } else {
+            alert(data.message); 
+        }
+    })
+    .catch(error => console.error('Error enabling FPGA:', error));
+}
 
 function deleteReservation(userId, timestamp) {
-        fetch('/admin/delete-reservation', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                userId: userId, 
-                timestamp: timestamp 
-                }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message); 
-                fetchAndDisplayTimeSlots(); 
-            } else {
-                alert(data.message); 
-            }
-        })
-        .catch(error => console.error('Error deleting reservation:', error));
-    }
+    fetch('/admin/delete-reservation', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            userId: userId, 
+            timestamp: timestamp 
+            }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message); 
+            fetchAndDisplayTimeSlots(); 
+        } else {
+            alert(data.message); 
+        }
+    })
+    .catch(error => console.error('Error deleting reservation:', error));
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     fetchAndDisplayTimeSlots();
-    
+    fetchAndDisplayPYNQs();
 });
 
 </script>

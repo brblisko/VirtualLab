@@ -104,7 +104,7 @@ final class ReservationFacade
     }
 
     
-    private function getUsernameByUserId(int $userId): ?string
+    public function getUsernameByUserId(int $userId): ?string
     {
         $user = $this->database->table('users')
             ->select('username')
