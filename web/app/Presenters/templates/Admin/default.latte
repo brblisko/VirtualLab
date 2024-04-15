@@ -24,6 +24,13 @@
 
 {block scripts}
 <script>
+
+function toggleOverlay(show) {
+    const overlay = document.getElementById('overlay');
+    overlay.style.display = show ? 'block' : 'none';
+}
+
+
 function fetchAndDisplayPYNQs()
 {
     fetch('/admin/fpgas')
@@ -158,6 +165,7 @@ function fetchAndDisplayTimeSlots() {
 
 function disableFPGA(ip)
 {
+    toggleOverlay(true); 
     console.log("vypinam: " + ip);
 
     fetch('/admin/disablefpga', {
@@ -179,7 +187,10 @@ function disableFPGA(ip)
             alert(data.message); 
         }
     })
-    .catch(error => console.error('Error disabling FPGA:', error));
+    .catch(error => console.error('Error disabling FPGA:', error))
+    .finally(() => {
+        toggleOverlay(false);  // Hide overlay after everything is done
+    }); 
 }
 
 function enableFPGA(ip)

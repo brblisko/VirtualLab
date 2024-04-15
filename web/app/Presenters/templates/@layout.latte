@@ -1,4 +1,4 @@
-<!-- Sceleton of the web application inspired by https://github.com/nobledeed/Podcast_Collective -->
+<!-- Section of the web application inspired by https://github.com/nobledeed/Podcast_Collective -->
 
 
 <!DOCTYPE html>
@@ -27,6 +27,25 @@
 
     updateNavigationBar();
     setInterval(updateNavigationBar, 60 *1000); // Update every 1 minutes
+
+    function toggleOverlay(show) {
+        const overlay = document.getElementById('overlay');
+        overlay.style.display = show ? 'block' : 'none';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var activeResLink = document.getElementById('activeRes');
+
+        if (activeResLink) {
+            activeResLink.addEventListener('click', function(event) {
+                event.preventDefault(); // Stop the link from navigating immediately
+                toggleOverlay(true); // Show the overlay
+                setTimeout(function() {
+                    window.location = activeResLink.getAttribute('href'); // Redirect after the overlay is visible
+                }, 100); // Delay in milliseconds to ensure the overlay shows up
+            });
+        }
+    });
+    
   </script>
   <script src="https://nette.github.io/resources/js/3/netteForms.min.js"></script>
 
@@ -36,6 +55,14 @@
 </head>
 
 <body>
+  <div id="overlay" style="display: none;">
+    <div style="text-align: center;">
+        <img src="/images/loading.gif" alt="Loading..." style="display: block; margin: auto;">
+        <p style="color: white; margin-top: 20px;">Please wait, PYNQ device is being prepared...</p>
+    </div>
+  </div>
+
+
    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light text-dark py-3 fixed-top">
       <div class="container-fluid">

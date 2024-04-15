@@ -44,7 +44,7 @@ final class ApiFacade
         $response = $this->httpClient->post('http://localhost:20000/Instruction', $payload);
 
         $statusCode = $response->getStatusCode();
-        if ($statusCode === 200) {
+        if ($statusCode === 201) {
             return true;
         } else {
             return false;
