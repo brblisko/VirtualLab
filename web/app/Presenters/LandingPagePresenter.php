@@ -12,7 +12,7 @@ final class LandingPagePresenter extends DefaultPresenter
 
     private $facade;
 
-    private $message = "Vitajte vo virtualnom laboratoriu!";
+    private $message = "Welcome to the virtual laboratory!";
     
     public function __construct(ReservationFacade $facade)
     {
@@ -22,7 +22,5 @@ final class LandingPagePresenter extends DefaultPresenter
     public function renderWelcome(): void
     {
         $this->template->message = $this->message;
-        $userId = $this->getUser()->getId();
-        $this->template->reservations = $this->facade->getAllReservations($userId);
     }
 }

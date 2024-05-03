@@ -32,17 +32,17 @@ final class ConnectionPresenter extends DefaultPresenter
         parent::startup();
 
         // // Enable Tracy and set output mode to debug
-        Debugger::enable(Debugger::DETECT, '/home/boris/shared/web/log', 'debug');
+        // Debugger::enable(Debugger::DETECT, '/home/boris/shared/web/log', 'debug');
 
-        $outputDebugger = new OutputDebugger();
-        $outputDebugger->start();
+        // $outputDebugger = new OutputDebugger();
+        // $outputDebugger->start();
     }
 
     public function actionDebug() {
         $userId = $this->getUser()->getId();
 
         $tunnelData = $this->facade->getTunnelsDataAndFilter((string) $this->getUser()->getId());
-        $tunnelData = $this->facade->getTunnelsData();
+        // $tunnelData = $this->facade->getTunnelsData();
         $data = $this->res_facade->getLiveReservation($userId);
 
         // Convert the items to a simple array of objects
@@ -88,16 +88,33 @@ final class ConnectionPresenter extends DefaultPresenter
                 $liveRes = $this->res_facade->getLiveReservation($item['user']);
                 if(empty($liveRes))
                 {
-                    $this->facade->sendInstruction($item['fpgaip'], $item['clientip'], $item['user'], "DELETE");
+                    $resultDelete = $this->facade->sendInstruction($item['fpgaip'], $item['clientip'], $item['user'], "DELETE");
+                
+                    $resultCreate = $this->facade->sendInstruction($item['fpgaip'], $clientIp, (string) $userId, "CREATE");
 
-                    $this->facade->sendInstruction($item['fpgaip'], $clientIp, (string) $userId, "CREATE");
-                    throw new \Exception("Tunnel Created");
+                    if(!$resultDelete || !$resultCreate)
+                    {
+                        return false;
+                    }
+                    else 
+                    {
+                        return true;
+                    }
                 }
             }
         }
         else
         {
-            $this->facade->sendInstruction($fpga['ip'], $clientIp,(string) $userId, "CREATE");
+            $resultCreate = $this->facade->sendInstruction($fpga['ip'], $clientIp,(string) $userId, "CREATE");
+
+            if(!$resultCreate)
+            {
+                return false;
+            }
+            else 
+            {
+                return true;
+            }
         }
     }
 
@@ -118,17 +135,27 @@ final class ConnectionPresenter extends DefaultPresenter
             ];
         }
 
-        // no tunnel created and user has active resevation
+        // no tunnel created and user has active resevation then create a tunnel
         if(empty($tunnelData) && !empty($reservation))
         {
-            $this->createTunnel();
-            throw new \Exception("tunnel created");
+            $result = $this->createTunnel();
+
+            if(!$result)
+            {
+                $this->flashMessage('There was an error preparing PYNQ device', 'error');
+
+                $this->redirect("Landingpage:welcome");
+            }
+
         }
+        // no active reservation and no active tunnel, deny access
         else if(empty($reservation) && empty($tunnelData))
         {
-            throw new \Exception("No active reservation"); 
-        }
+            $this->flashMessage('You have no active reservation, please reserve a timeslot', 'error');
 
+            $this->redirect("Landingpage:welcome");
+        }
+        // if the user has a no active reservation but a tunnel do nothing (allow access)
     }
 
 
@@ -138,15 +165,11 @@ final class ConnectionPresenter extends DefaultPresenter
 
     public function renderActive(): void 
     {
-       
         $this->getHttpResponse()->setHeader('X-Frame-Options', "");
 
+        $tunnel = $this->facade->getTunnelsDataAndFilter((string) $this->getUser()->getId());
 
-        $tunnel = $this->facade->getTunnelsDataAndFilter($this->getUser()->getId());
-
-
-        //$fpgas = $this->facade->getFpgaInfo();
-        $this->template->port = 30000;
+        $this->template->port = $tunnel[0]['port'];
     }
 
 

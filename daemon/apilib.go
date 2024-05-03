@@ -10,7 +10,7 @@ type Tunnel struct {
 	FPGAIP    string `json:"fpgaip"`
 	ClientIP  string `json:"clientip"`
 	User      string `json:"user"`
-	Port      string `json:"port"`
+	Port      int    `json:"port"`
 	Timestamp int64  `json:"timestamp"`
 }
 

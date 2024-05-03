@@ -6,21 +6,10 @@
     {/if}
 
 
-    <h1 n:block="title">{$message}</h1>
-    {foreach $reservations as $reservation}
-    <div>
-        <h2>
-        {$reservation->user_id}
-        </h2>
+    <div class="welcome">
+        <h1 n:block="title">{$message}</h1>
 
-        <div>
-        {$reservation->time}
-        </div>
-
-        <div>
-        {$username}
-        </div>
-
+        <h3 style="margin-top: 10px; display: block;">To create a reservation, please navigate to the Reservations site using the navigation bar.</h3>
     </div>
-    {/foreach}
+
 {/block}

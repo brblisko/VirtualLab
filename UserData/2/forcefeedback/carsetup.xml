@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?> 
+<FFBCars>
+	<!-- Car setups for force false
+	This file holds a list of car specific setups. If a car is not found here no modifiers are applied.
+	         name= Folder name of car
+	   scaleForce= wheel linear force scale
+	scaleFriction= wheel friction force scale
+	 scaleEffects= collision, gear change etc effects' force scale-->
+	<FFBCar name="sst" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="555" template="sst" scaleEffects="1.0"/>
+	<FFBCar name="405" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<!-- Old car names should be removed! -->
+	<FFBCar name="RD3 Style Test 4WD" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Subaru Impreza Spec C Tarmac A" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Mitusbishi Evo IX" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Subaru Impreza 555" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Peugeot 205 T16" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Citroen Xsara Rally X" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Audi TT" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Suzuki Swift Super 1600 Tarmac" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Citroen C2 Super 1600" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="McMillin Racing Buggy" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Lancia Stratos" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+	<FFBCar name="Fenomenon Stratos" scaleForce="1.0" scaleFriction="1.0" scaleEffects="1.0"/>
+</FFBCars>
+
+
+
+
+
+
+
+
+
+
+
+

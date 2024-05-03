@@ -174,3 +174,11 @@ ul.tree li.file::before {
   z-index: 1050;
   cursor: not-allowed;
 }
+
+.welcome {
+  display: flex;
+  justify-content: center; /* Centers content horizontally */
+  align-items: center; /* Centers content vertically */
+  height: 100vh; /* Full viewport height */
+  flex-direction: column; /* Arranges children in a column */
+}

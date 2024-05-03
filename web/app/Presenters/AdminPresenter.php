@@ -186,36 +186,7 @@ final class AdminPresenter extends DefaultPresenter
 
     public function renderDefault()
     {
-        $timeSlots = $this->generateTimeSlots();
-        
-        $groupedReservations = $this->facade->getFutureReservationsGroupedByTimestamp();
-        
-        foreach ($timeSlots as $index => $dateTime) {
-            // Convert the DateTime object to a string that matches the keys in $groupedReservations
-            $timestampStr = $dateTime->format('Y-m-d H:i:s');
-            
-            // Initialize an empty array to store user details
-            $userDetails = [];
-        
-            // Check if there are reservations for the current timeslot
-            if (isset($groupedReservations[$timestampStr])) {
-                foreach ($groupedReservations[$timestampStr] as $reservation) {
-
-                    $userDetails[] = (object) [
-                        'user_id' => $reservation['user_id'],
-                        'username' => $reservation['username'],
-                    ];
-                }
-            }
-        
-            $timeSlots[$index] = [
-                'timeslot' => $timestampStr,
-                'userDetails' => $userDetails,
-            ];
-        }
-        
-        
-        $this->template->timeSlots = $timeSlots;
+        // render deafult
     }
 
 
@@ -260,13 +231,12 @@ final class AdminPresenter extends DefaultPresenter
 
 
         if ($userId && $timestamp) {
-            // Assuming you have a method to delete the reservation by userId and timestamp
+
             $result = $this->facade->deleteReservation($userId, $timestamp);
 
             if ($result) {
                 $this->sendJson(['success' => true, 'message' => 'Reservation deleted successfully.']);
             } else {
-                // Handle case where deletion was not successful, e.g., reservation not found
                 $this->sendJson(['success' => false, 'message' => 'Failed to delete reservation.']);
             }
         } else {

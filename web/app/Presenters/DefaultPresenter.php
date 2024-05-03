@@ -7,9 +7,9 @@ use App\Models\ReservationFacade;
 use Nette\Application\UI\Presenter;
 use Nette\Application\Responses\JsonResponse;
 use App\Models\Authenticator;
+use Nette\Utils\DateTime;
 use Nette\Bridges\ApplicationLatte\ILatteFactory;
-
-
+use Nette\Utils\Strings;
 
 class DefaultPresenter extends Presenter
 {
@@ -57,29 +57,48 @@ class DefaultPresenter extends Presenter
     {
         $userId = $this->getUser()->getId();
         $items = $this->res_facade->getLiveReservation($userId);
+        $tunnel = $this->api_facade->getTunnelsDataAndFilter((string) $userId);
+
+        if($items || $tunnel)
+        {
+            $responseData[] = [
+                'data' => true
+            ];
+        }
+        else{
+            $responseData = [];
+        }
+
 
          // Convert the items to a simple array of objects
-         $responseData = [];
-         foreach ($items as $item) {
-             $responseData[] = [
-                 'res_id' => $item->res_id, 
-                 'time' => $item->time
-             ];
-         }
+        //  foreach ($items as $item) {
+        //      $responseData[] = [
+        //          'res_id' => $item->res_id, 
+        //          'time' => $item->time
+        //      ];
+        //  }
 
          $this->sendJson($responseData);
     }
 
     public function actionButtons()
     {
-        // Get current time
-        $currentTime = time();
+        $currentTime = new DateTime();
+        $endTime = (clone $currentTime)->modify('+1  days');
 
-        // Calculate the next 15-minute interval
-        $next15Minutes = ceil($currentTime / (15 * 60)) * (15 * 60);
+        // Calculate the nearest 15-minute interval for the next window
+        $minutes = $currentTime->format('i');
+        $roundedMinutes = (int) (ceil($minutes / 15) * 15);
 
-        // Calculate the end time (1 day from the current time)
-        $endTime = strtotime('+1 day', strtotime(date('Y-m-d H:i:s', $currentTime)));
+        // If the next window is at 60 minutes, set it to 0 and add 1 hour
+        if ($roundedMinutes == 60) {
+            $roundedMinutes = 0;
+            $currentTime->modify('+1 hour');
+        }
+
+        // Set the initial time slot to the next window
+        $hours = (int) $currentTime->format('H');
+        $currentTime->setTime($hours, $roundedMinutes);
 
         // Query reservations for the user within the time range
         $userId =  $this->getUser()->getId();
@@ -91,8 +110,8 @@ class DefaultPresenter extends Presenter
 
         // Construct the JSON response
         $buttons = [];
-        for ($time = $next15Minutes; $time < $endTime; $time += 15 * 60) {
-            $timestampKey = date('Y-m-d H:i:s', $time);
+        while ($currentTime <= $endTime) {
+            $timestampKey = $currentTime->format('Y-m-d H:i:s');
             $reservationExists = isset($reservations[$timestampKey]);
 
             $reservationsCount = (isset($allReservations[$timestampKey])) ? $allReservations[$timestampKey] : 0;
@@ -100,6 +119,8 @@ class DefaultPresenter extends Presenter
             $locked = ($reservationsCount === $maxFpga) || ($userResCounter === 5);
             $buttons[$timestampKey] = ['active_reservation' => $reservationExists,
                                         'locked' => $locked];
+            
+            $currentTime->modify('+15 minutes');
         }
 
         // Return the JSON response
@@ -107,23 +128,33 @@ class DefaultPresenter extends Presenter
     }
 
     public function actionAllReservations(){
-        // Get current time
-        $currentTime = time();
+        $currentTime = new DateTime();
+        $endTime = (clone $currentTime)->modify('+1  days');
 
-        // Calculate the next 15-minute interval
-        $next15Minutes = ceil($currentTime / (15 * 60)) * (15 * 60);
+        // Calculate the nearest 15-minute interval for the next window
+        $minutes = $currentTime->format('i');
+        $roundedMinutes = (int) (ceil($minutes / 15) * 15);
 
-        // Calculate the end time (1 day from the current time)
-        $endTime = strtotime('+1 day', strtotime(date('Y-m-d H:i:s', $currentTime)));
+        // If the next window is at 60 minutes, set it to 0 and add 1 hour
+        if ($roundedMinutes == 60) {
+            $roundedMinutes = 0;
+            $currentTime->modify('+1 hour');
+        }
+
+        // Set the initial time slot to the next window
+        $hours = (int) $currentTime->format('H');
+        $currentTime->setTime($hours, $roundedMinutes);
 
         $reservations = $this->res_facade->getAllReservationsTimestamp();
 
         // Construct the JSON response
         $buttons = [];
-        for ($time = $next15Minutes; $time < $endTime; $time += 15 * 60) {
-            $timestampKey = date('Y-m-d H:i:s', $time);
+        while ($currentTime <= $endTime) {
+            $timestampKey = $currentTime->format('Y-m-d H:i:s');
             $reservationsCount = (isset($reservations[$timestampKey])) ? $reservations[$timestampKey] : 0;
             $buttons[$timestampKey] = ['reservation_count' => $reservationsCount];
+        
+            $currentTime->modify('+15 minutes');
         }
 
         // Return the JSON response
@@ -166,7 +197,7 @@ class DefaultPresenter extends Presenter
         }
 
         if ($action == "create_reservation") {
-            $this->res_facade->insertReservation($userId,$timestamp);
+            $this->res_facade->insertReservation($userId, $timestamp);
         }
         else if ($action == "cancel_reservation") {
             $this->res_facade->deleteReservation($userId, $timestamp);

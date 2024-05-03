@@ -79,7 +79,7 @@ final class ApiFacade
 
     public function getAllFpgaCount()
     {
-        $data = $this->apiService->getAllFpga();
+        $data = $this->apiService->getFpgas();
 
         $count = 0;
         foreach ($data as $item)

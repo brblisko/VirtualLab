@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -73,13 +74,23 @@ func mount(instruction Instruction) {
 	}
 	defer session.Close()
 
+	dir, err := os.Getwd()
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+
+	mountDir := filepath.Join(dir, "..", "UserData", instruction.User)
+	fmt.Println("mounting: ", mountDir)
+
+
 	// Run the command on the remote server
-	output, err := session.CombinedOutput("/root/mount.sh " + instruction.User)
-	if err != nil {
-		fmt.Println("Failed to run command:", err)
-		os.Exit(1)
-	}
-	fmt.Printf(string(output))
+	// output, err := session.CombinedOutput("/root/mount.sh " + mountDir)
+	// if err != nil {
+	// 	fmt.Println("Failed to run command:", err)
+	// 	os.Exit(1)
+	// }
+	// fmt.Printf(string(output))
 	client.Close()
 
 }
@@ -119,6 +130,7 @@ func newTunnel(instruction Instruction) {
 
 	for i := 0; i < len(FPGAs); i++ {
 		if FPGAs[i].IP == instruction.FPGAIP {
+			tmpTunnel.Port = FPGAs[i].Port
 			FPGAs[i].State = "TUNNEL"
 		}
 	}

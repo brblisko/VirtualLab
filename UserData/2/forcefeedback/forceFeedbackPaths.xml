@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dataset>
+	<xml processor="GameFFB" filename="forcefeedback/devicesetup.xml" map="UPDATE" pool="TEMPORARY" userdata="device"/>
+	<xml processor="GameFFB" filename="forcefeedback/effectsetup.xml" map="UPDATE" pool="TEMPORARY" userdata="effect"/>
+	<xml processor="GameFFB" filename="forcefeedback/carsetup.xml" map="UPDATE" pool="TEMPORARY" userdata="car"/>
+</dataset>

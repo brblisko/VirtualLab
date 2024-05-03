@@ -142,6 +142,7 @@ function fetchAndDisplayTimeSlots() {
                     
                     const deleteButton = document.createElement('button');
                     deleteButton.textContent = 'Delete';
+                    deleteButton.style.backgroundColor = 'lightcoral';
                     deleteButton.onclick = function() {
                         deleteReservation(detail.user_id, timeSlot.timeslot);
                     };

@@ -77,31 +77,18 @@
         fixDelButtons();
         fixDownloadButtons();
         
-        moveListItems();
+        sortAndMoveItems();
     });
 
-    function moveListItems() {
-        // Select the tree ul element
-        var tree = document.querySelector('ul.tree');
-        
-        // Select all list items within the tree
-        var listItems = tree.querySelectorAll('li');
-        
-        // Sort list items based on their paths
-        var sortedListItems = Array.from(listItems).sort(function(a, b) {
-            var pathA = a.getAttribute('path');
-            var pathB = b.getAttribute('path');
-            return pathA.localeCompare(pathB);
-        });
-        
-        // Reorder list items based on the paths hierarchy
+    function reorderItems(sortedListItems)
+    {
         sortedListItems.forEach(function(item) {
             // Check if the item is a directory
             if (item.classList.contains('directory')) {
                 // Get the path of the directory
                 var directoryPath = item.getAttribute('path');
                 
-                // Select children files without class directory
+                // Select children files
                 var childrenFiles = sortedListItems.filter(function(childItem) {
                     return childItem !== item && 
                         !childItem.classList.contains('directory') && 
@@ -122,6 +109,25 @@
                 });
             }
         });
+    }
+
+    function sortAndMoveItems() {
+        // Select the tree ul element
+        var tree = document.querySelector('ul.tree');
+        
+        // Select all list items within the tree
+        var listItems = tree.querySelectorAll('li');
+        
+        // Sort list items based on their paths
+        var sortedListItems = Array.from(listItems).sort(function(a, b) {
+            var pathA = a.getAttribute('path');
+            var pathB = b.getAttribute('path');
+            return pathA.localeCompare(pathB);
+        });
+        
+        console.log(sortedListItems);
+        // Reorder list items based on the paths hierarchy
+        reorderItems(sortedListItems);
     }
 </script>
 {/block}

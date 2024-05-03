@@ -605,3 +605,91 @@
         "deleted_reservations": []
     }
 }
+{
+    "timeOfDeletion": "2024-04-16 23:52:04",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-04-17 00:35:57",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-04-18 00:19:56",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-04-18 00:46:20",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-04-18 00:48:12",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-04-18 00:49:10",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-04-18 00:55:14",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-04-18 01:02:12",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-04-18 01:23:21",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-04-26 10:36:01",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": [
+            {
+                "username": "admin",
+                "user_id": 4,
+                "timestamp": "2024-04-26 11:45:00"
+            },
+            {
+                "username": "admin",
+                "user_id": 4,
+                "timestamp": "2024-04-26 12:00:00"
+            }
+        ]
+    }
+}
+{
+    "timeOfDeletion": "2024-05-01 14:26:39",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
