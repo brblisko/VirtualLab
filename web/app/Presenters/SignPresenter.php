@@ -51,6 +51,6 @@ class SignPresenter extends Nette\Application\UI\Presenter
     {
         $this->getUser()->logout();
         $this->flashMessage('You have been signed out.');
-        $this->redirect('Landingpage:welcome');
+        $this->redirect('LandingPage:welcome');
     }
 }
