@@ -85,12 +85,12 @@ func mount(instruction Instruction) {
 
 
 	// Run the command on the remote server
-	// output, err := session.CombinedOutput("/root/mount.sh " + mountDir)
-	// if err != nil {
-	// 	fmt.Println("Failed to run command:", err)
-	// 	os.Exit(1)
-	// }
-	// fmt.Printf(string(output))
+	output, err := session.CombinedOutput("/root/mount.sh " + mountDir)
+	if err != nil {
+		fmt.Println("Failed to run command:", err)
+		os.Exit(1)
+	}
+	fmt.Printf(string(output))
 	client.Close()
 
 }
