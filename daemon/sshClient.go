@@ -7,10 +7,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func connect(ip string) {
-	// SSH key file path
-	keyPath := "/home/boris/.ssh/id_rsa"
-
+func connect(ip string) error {
 	// Destination server details
 	username := "root"
 	server := ip
@@ -19,14 +16,14 @@ func connect(ip string) {
 	key, err := os.ReadFile(keyPath)
 	if err != nil {
 		fmt.Println("Failed to read private key:", err)
-		os.Exit(1)
+		return err
 	}
 
 	// Parse the private key
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
 		fmt.Println("Failed to parse private key:", err)
-		os.Exit(1)
+		return err
 	}
 
 	// SSH client configuration
@@ -42,8 +39,9 @@ func connect(ip string) {
 	client, err = ssh.Dial("tcp", server+":22", config)
 	if err != nil {
 		fmt.Println("Failed to connect to the server:", err)
-		os.Exit(1)
+		return err
 	}
 
 	fmt.Println("Successfully connected to %v.\n", ip)
+	return nil
 }

@@ -12,35 +12,35 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func changeOwner(dir string) {
+func changeOwner(dir string) error {
 	u, err := user.Lookup("student")
 	if err != nil {
 		fmt.Printf("Error getting user information: %v\n", err)
-		return
+		return err
 	}
 
 	uid, err := strconv.Atoi(u.Uid)
 	if err != nil {
 		fmt.Printf("Error converting UID to integer: %v\n", err)
-		return
+		return err
 	}
 
 	gid, err := strconv.Atoi(u.Gid)
 	if err != nil {
 		fmt.Printf("Error converting GID to integer: %v\n", err)
-		return
+		return err
 	}
 
 	err = os.Chown(dir, uid, gid)
 	if err != nil {
 		fmt.Printf("Error changing ownership: %v\n", err)
-		return
+		return err
 	}
-
+	return nil
 }
 
-func checkDir(dir string) {
-	dir = "/UserData/" + dir
+func checkDir(dir string) error {
+	dir = filepath.Join(userDataDir, dir)
 
 	_, err := os.Stat(dir)
 	if err != nil {
@@ -48,61 +48,66 @@ func checkDir(dir string) {
 			err := os.MkdirAll(dir, os.ModePerm)
 			if err != nil {
 				fmt.Printf("Error creating directory: %v\n", err)
-				return
+				return err
 			}
 
-			changeOwner(dir)
+			err = changeOwner(dir)
+			if err != nil {
+				fmt.Printf("Error changing owner of directory: %v\n", err)
+			}
 
 		} else {
 			fmt.Printf("Error checking directory: %v\n", err)
+			return err
 		}
-		return
 	}
-
+	return nil 
 }
 
-func mount(instruction Instruction) {
-	checkDir(instruction.User)
+func mount(instruction Instruction) error {
+	err := checkDir(instruction.User)
+	if err != nil {
+		return err
+	}
 
-	connect(instruction.FPGAIP)
-
+	err = connect(instruction.FPGAIP)
+	if err != nil {
+		return err
+	}	
 	// Open a new session
 	session, err := client.NewSession()
 	if err != nil {
 		fmt.Println("Failed to create session:", err)
-		os.Exit(1)
+		return err
 	}
 	defer session.Close()
 
-	dir, err := os.Getwd()
-    if err != nil {
-        fmt.Println("Error:", err)
-        return
-    }
+	mountDir := filepath.Join(userDataDir, instruction.User)
 
-	mountDir := filepath.Join(dir, "..", "UserData", instruction.User)
 	fmt.Println("mounting: ", mountDir)
-
 
 	// Run the command on the remote server
 	output, err := session.CombinedOutput("/root/mount.sh " + mountDir)
 	if err != nil {
 		fmt.Println("Failed to run command:", err)
-		os.Exit(1)
+		return err
 	}
 	fmt.Printf(string(output))
 	client.Close()
-
+	return nil
 }
 
-func unmount(instruction Instruction) {
-	connect(instruction.FPGAIP)
+func unmount(instruction Instruction) error {
+	err := connect(instruction.FPGAIP)
+	if err != nil {
+		return err
+	}
 
 	// Open a new session
 	session, err := client.NewSession()
 	if err != nil {
 		fmt.Println("Failed to create session:", err)
-		os.Exit(1)
+		return err
 	}
 	defer session.Close()
 
@@ -110,12 +115,12 @@ func unmount(instruction Instruction) {
 	output, err := session.CombinedOutput("/root/unmount.sh")
 	if err != nil {
 		fmt.Println("Failed to run command:", err)
-		os.Exit(1)
+		return err
 	}
 	fmt.Printf(string(output))
 
 	client.Close()
-
+	return nil
 }
 
 func newTunnel(instruction Instruction) {
@@ -154,7 +159,10 @@ func deleteTunnel(instruction Instruction) {
 }
 
 func instructionCreate(instruction Instruction) ErrorInternal {
-	mount(instruction)
+	err := mount(instruction)
+	if err != nil {
+		return ErrorInternal{ErrorCode: 1, Message: err.Error()}
+	}
 
 	table := "filter"
 	chain := "FORWARD"
@@ -190,7 +198,11 @@ func instructionCreate(instruction Instruction) ErrorInternal {
 }
 
 func instructionDelete(instruction Instruction) ErrorInternal {
-	unmount(instruction)
+	
+	err = unmount(instruction)
+	if err != nil {
+		return ErrorInternal{ErrorCode: 1, Message: err.Error()}
+	}
 
 	table := "filter"
 	chain := "FORWARD"
@@ -251,6 +263,7 @@ func postInstruction(c *gin.Context) {
 	var instruction Instruction
 
 	if err := c.BindJSON(&instruction); err != nil {
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
@@ -267,6 +280,7 @@ func postState(c *gin.Context) {
 	var state State
 
 	if err := c.BindJSON(&state); err != nil {
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 

@@ -25,23 +25,6 @@ func boot() {
 	}
 }
 
-func saveJSON(filename string, data interface{}) error {
-	// Convert data to JSON format
-	jsonData, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	// Write JSON data to the file
-	err = os.WriteFile(filename, jsonData, 0644)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Data saved to %s\n", filename)
-	return nil
-}
-
 func loadFPGAs(filename string) ([]FPGA, error) {
 	// Read JSON data from the file
 	jsonData, err := os.ReadFile(filename)

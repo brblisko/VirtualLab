@@ -167,7 +167,7 @@ class FileManager
     
     private function buildDir($userId)
     {
-        $this->userDirectory = "../../UserData/" . (string) $userId . "/";
+        $this->userDirectory = "/home/boris/UserData/" . (string) $userId . "/";
         if (!file_exists($this->userDirectory)) {
             mkdir($this->userDirectory, 0777, true);
         }

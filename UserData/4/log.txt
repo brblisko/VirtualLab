@@ -693,3 +693,17 @@
         "deleted_reservations": []
     }
 }
+{
+    "timeOfDeletion": "2024-05-04 16:55:12",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}
+{
+    "timeOfDeletion": "2024-05-04 17:01:33",
+    "data": {
+        "deleted_tunnels": [],
+        "deleted_reservations": []
+    }
+}

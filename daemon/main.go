@@ -22,6 +22,11 @@ var common = Commons{
 
 var client *ssh.Client
 
+// UserData directory
+var userDataDir = "/home/boris/UserData/"
+// SSH key file path
+var keyPath = "/home/boris/.ssh/id_rsa"
+
 func main() {
 	if err != nil {
 		fmt.Printf("Error creating iptables client: %v\n", err)

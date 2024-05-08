@@ -15,7 +15,7 @@
     <hr>
 
 <h2>Files</h2>
-<button data-download-url="{link 'FileManager:downloadDir', ""}" class="downloadButton">🔽 Download All Files</button>
+<button data-download-url="{link 'Filemanager:downloadDir', ""}" class="downloadButton">🔽 Download All Files</button>
 {if $contents}
     <ul class="tree">
         {foreach $contents as $item}
@@ -23,14 +23,14 @@
                 {if $item['isDirectory']}
                     <span class="name"> <strong>{$item['path']}</strong> </span>
                     <div class="actions">
-                    <button data-delete-url="{link 'FileManager:deleteDir', $item['path']}" class="deleteButton">❌ Delete Directory "{$item['path']}"</button>
-                    <button data-download-url="{link 'FileManager:downloadDir', $item['path']}" class="downloadButton">🔽 Download Directory "{$item['path']}"</button>
+                    <button data-delete-url="{link 'Filemanager:deleteDir', $item['path']}" class="deleteButton">❌ Delete Directory "{$item['path']}"</button>
+                    <button data-download-url="{link 'Filemanager:downloadDir', $item['path']}" class="downloadButton">🔽 Download Directory "{$item['path']}"</button>
                     </div>
                 {else}
                     <span class="name"><a >{$item['name']}</a> </span>
                     <div class="actions">
-                    <button data-delete-url="{link 'FileManager:delete', $item['path']}" class="deleteButton">❌ Delete File "{$item['path']}"</button>
-                    <button data-download-url="{link 'FileManager:download', 'fileName' => $item['path']}" class="downloadButton">🔽 Download File "{$item['path']}"</button>
+                    <button data-delete-url="{link 'Filemanager:delete', $item['path']}" class="deleteButton">❌ Delete File "{$item['path']}"</button>
+                    <button data-download-url="{link 'Filemanager:download', 'fileName' => $item['path']}" class="downloadButton">🔽 Download File "{$item['path']}"</button>
                     </div>
                 {/if}
             </li>
