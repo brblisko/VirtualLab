@@ -23,7 +23,7 @@ var common = Commons{
 var client *ssh.Client
 
 // UserData directory
-var userDataDir = "/home/boris/UserData/"
+var userDataDir = "/home/student/UserData/"
 // SSH key file path
 var keyPath = "/home/boris/.ssh/id_rsa"
 
