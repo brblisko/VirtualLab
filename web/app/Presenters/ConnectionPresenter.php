@@ -144,7 +144,7 @@ final class ConnectionPresenter extends DefaultPresenter
             {
                 $this->flashMessage('There was an error preparing PYNQ device', 'error');
 
-                $this->redirect("Landingpage:welcome");
+                $this->redirect("LandingPage:welcome");
             }
 
         }
@@ -153,7 +153,7 @@ final class ConnectionPresenter extends DefaultPresenter
         {
             $this->flashMessage('You have no active reservation, please reserve a timeslot', 'error');
 
-            $this->redirect("Landingpage:welcome");
+            $this->redirect("LandingPage:welcome");
         }
         // if the user has a no active reservation but a tunnel do nothing (allow access)
     }
