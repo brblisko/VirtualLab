@@ -43,7 +43,7 @@ class SignPresenter extends Nette\Application\UI\Presenter
     {
         try {
             $this->getUser()->login($values->username, $values->password);
-            $this->redirect('Landingpage:welcome');
+            $this->redirect('LandingPage:welcome');
         } catch (Nette\Security\AuthenticationException $e) {
             $form->addError($e->getMessage());
         }
