@@ -52,7 +52,7 @@ final class AdminPresenter extends DefaultPresenter
 
         if (!$this->getUser()->getRoles() || !in_array('admin', $this->getUser()->getRoles())) {
             $this->flashMessage('Access denied. This section is only available to administrators.', 'error');
-            $this->redirect("Landingpage:welcome");
+            $this->redirect("LandingPage:welcome");
         }
     }
 
