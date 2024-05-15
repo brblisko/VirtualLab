@@ -11,6 +11,7 @@ The remote laboratory application provides access to the PYNQ devices using tunn
 - The daemon needs to be run with elevated privileges to set up `iptables`.
 - The application requires `student` profiles to be set up on the server and on PYNQ devices with the same `UID`.
 - The web application needs to be run under the `student` profile.
+- Scripts from `./Scripts` need to be added to the `root` home directory on the PYNQ devices. Also, the server requires being logged in as the `root` user on the PYNQ devices without a password using the RSA key.
 
 ## Installation
 

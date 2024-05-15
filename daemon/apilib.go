@@ -1,3 +1,8 @@
+/**
+ * Application    VirtualLab
+ * Author         Boris Vesely
+ */
+
 package main
 
 type FPGA struct {
