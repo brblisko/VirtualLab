@@ -127,6 +127,7 @@ function addListener(button){
                         
                         fetchData().then(updatedData => {
                             updateButton(button, updatedData);
+                            fetchAvailableSpots();
                             updateCounter();
                         });
                         

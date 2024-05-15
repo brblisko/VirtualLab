@@ -11,17 +11,19 @@ class SignPresenter extends Nette\Application\UI\Presenter
 {
     private $authenticator;
 
+    // Constructor to initialize the authenticator
     public function __construct(Authenticator $authenticator)
     {
         $this->authenticator = $authenticator;
     }
 
+    // Method to render the sign-in form
     public function renderIn()
     {
         // Render sign-in form
     }
 
-
+    // Method to create the sign-in form component
     protected function createComponentSignInForm()
     {
         $form = new Nette\Application\UI\Form;
@@ -39,6 +41,7 @@ class SignPresenter extends Nette\Application\UI\Presenter
         return $form;
     }
 
+    // Method called on successful form submission
     public function signInFormSucceeded(Nette\Application\UI\Form $form, \stdClass $values)
     {
         try {
@@ -49,6 +52,7 @@ class SignPresenter extends Nette\Application\UI\Presenter
         }
     }
 
+    // Method to handle user sign out
     public function actionOut(): void
     {
         $this->getUser()->logout();

@@ -10,26 +10,27 @@ final class ApiFacade
     private $apiService;
     private $httpClient;
 
-
+    // Constructor to initialize the API service and HTTP client
     public function __construct(ApiService $apiService, Client $httpClient)
     {
         $this->httpClient = $httpClient;
         $this->apiService = $apiService;
-
     }
 
+    // Method to get and filter tunnel data by user ID
     public function getTunnelsDataAndFilter($userId)
     {
         $data = $this->apiService->getTunnelsData();
         return $this->apiService->filterTunnelsData($data, $userId);
     }
 
+    // Method to get tunnel data
     public function getTunnelsData()
     {
-        $data = $this->apiService->getTunnelsData();
-        return $data;
+        return $this->apiService->getTunnelsData();
     }
 
+    // Method to send an instruction to the FPGA
     public function sendInstruction(string $fpgaIp, string $clientIp, string $userId, string $type)
     {
         $payload = [
@@ -43,15 +44,10 @@ final class ApiFacade
 
         $response = $this->httpClient->post('http://localhost:20000/Instruction', $payload);
 
-        $statusCode = $response->getStatusCode();
-        if ($statusCode === 201) {
-            return true;
-        } else {
-            return false;
-        }
-
+        return $response->getStatusCode() === 201;
     }
 
+    // Method to set the state of an FPGA
     public function setState(string $fpgaIp, string $state)
     {
         $payload = [
@@ -63,29 +59,23 @@ final class ApiFacade
 
         $response = $this->httpClient->post('http://localhost:20000/State', $payload);
 
-        $statusCode = $response->getStatusCode();
-        if ($statusCode === 200) {
-            return true;
-        } else {
-            return false;
-        }
+        return $response->getStatusCode() === 200;
     }
 
+    // Method to get FPGA information
     public function getFpgaInfo()
     {
-        $data = $this->apiService->getFpgas();
-        return $data;
+        return $this->apiService->getFpgas();
     }
 
+    // Method to get the count of all FPGAs that are not disabled
     public function getAllFpgaCount()
     {
         $data = $this->apiService->getFpgas();
 
         $count = 0;
-        foreach ($data as $item)
-        {
-            if($item['state'] !== 'DISABLED')
-            {
+        foreach ($data as $item) {
+            if ($item['state'] !== 'DISABLED') {
                 $count++;
             }
         }

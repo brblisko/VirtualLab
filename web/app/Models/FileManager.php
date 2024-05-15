@@ -3,13 +3,10 @@ namespace App\Models;
 
 use Nette;
 use Nette\Utils\Strings;
-use Nette\Http\Response;
 use ZipArchive;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
-use GuzzleHttp\Client;
-use Nette\Application\Responses\FileResponse;
 
 class FileManager
 {

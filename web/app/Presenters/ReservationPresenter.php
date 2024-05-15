@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace App\Presenters;
 
-
 use Nette\Utils\DateTime;
 use App\Models\ReservationFacade;
 use Nette;
 
 final class ReservationPresenter extends DefaultPresenter
 {
-
     private $facade;
-    
+
+    // Constructor to initialize the ReservationFacade
     public function __construct(ReservationFacade $facade)
     {
         $this->facade = $facade;
     }
 
+    // Method to render the reservation table
     public function renderTable()
     {
         $timeSlots = $this->generateTimeSlots();
         $this->template->timeSlots = $timeSlots;
-        
+
         // Calculate start and end indices for each column
         $totalTimeSlots = count($timeSlots);
         $columnSize = (int) ceil($totalTimeSlots / 3);
@@ -39,10 +39,11 @@ final class ReservationPresenter extends DefaultPresenter
         $this->template->columnEndIndex = $columnEndIndex;
     }
 
+    // Method to generate time slots in 15-minute intervals
     private function generateTimeSlots()
     {
         $currentTime = new DateTime();
-        $endDate = (clone $currentTime)->modify('+1  days');
+        $endDate = (clone $currentTime)->modify('+1 days');
 
         // Calculate the nearest 15-minute interval for the next window
         $minutes = $currentTime->format('i');
@@ -60,7 +61,7 @@ final class ReservationPresenter extends DefaultPresenter
 
         $timeSlots = [];
         while ($currentTime <= $endDate) {
-            // Create DateTime object for current time slot
+            // Create DateTime object for the current time slot
             $timeSlotDateTime = clone $currentTime;
             $timeSlots[] = $timeSlotDateTime;
 
@@ -70,5 +71,4 @@ final class ReservationPresenter extends DefaultPresenter
 
         return $timeSlots;
     }
-
 }

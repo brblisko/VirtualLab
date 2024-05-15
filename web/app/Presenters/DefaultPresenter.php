@@ -9,7 +9,6 @@ use Nette\Application\Responses\JsonResponse;
 use App\Models\Authenticator;
 use Nette\Utils\DateTime;
 use Nette\Bridges\ApplicationLatte\ILatteFactory;
-use Nette\Utils\Strings;
 
 class DefaultPresenter extends Presenter
 {
@@ -20,7 +19,7 @@ class DefaultPresenter extends Presenter
     /** @var ILatteFactory @inject */
     public $latteFactory;
 
-
+    // Constructor to initialize the facades and authenticator
     public function __construct(ReservationFacade $res_facade, Authenticator $authenticator, ApiFacade $api_facade)
     {
         $this->res_facade = $res_facade;
@@ -28,11 +27,13 @@ class DefaultPresenter extends Presenter
         $this->api_facade = $api_facade;
     }
 
+    // Method to render the default template
     public function renderDefault()
     {
         // Render default template
     }
 
+    // Method to check if the user is logged in at startup
     protected function startup()
     {
         parent::startup();
@@ -41,7 +42,7 @@ class DefaultPresenter extends Presenter
         }
     }
 
-
+    // Method to prepare data before rendering the template
     protected function beforeRender()
     {
         parent::beforeRender();
@@ -50,41 +51,26 @@ class DefaultPresenter extends Presenter
         $user = $this->getUser()->getIdentity();
 
         // Pass the username to the layout template
-        $this->template->username = $user ?  $user->getData()['username'] : null;
+        $this->template->username = $user ? $user->getData()['username'] : null;
     }
 
+    // Method to get live reservation data
     public function actionGetLiveReservation()
     {
         $userId = $this->getUser()->getId();
         $items = $this->res_facade->getLiveReservation($userId);
         $tunnel = $this->api_facade->getTunnelsDataAndFilter((string) $userId);
 
-        if($items || $tunnel)
-        {
-            $responseData[] = [
-                'data' => true
-            ];
-        }
-        else{
-            $responseData = [];
-        }
+        $responseData = ($items || $tunnel) ? [['data' => true]] : [];
 
-
-         // Convert the items to a simple array of objects
-        //  foreach ($items as $item) {
-        //      $responseData[] = [
-        //          'res_id' => $item->res_id, 
-        //          'time' => $item->time
-        //      ];
-        //  }
-
-         $this->sendJson($responseData);
+        $this->sendJson($responseData);
     }
 
+    // Method to generate reservation buttons
     public function actionButtons()
     {
         $currentTime = new DateTime();
-        $endTime = (clone $currentTime)->modify('+1  days');
+        $endTime = (clone $currentTime)->modify('+1 days');
 
         // Calculate the nearest 15-minute interval for the next window
         $minutes = $currentTime->format('i');
@@ -101,12 +87,11 @@ class DefaultPresenter extends Presenter
         $currentTime->setTime($hours, $roundedMinutes);
 
         // Query reservations for the user within the time range
-        $userId =  $this->getUser()->getId();
+        $userId = $this->getUser()->getId();
         $reservations = $this->res_facade->getAllReservationsUserTimestamp($userId);
         $allReservations = $this->res_facade->getAllReservationsTimestamp();
         $maxFpga = $this->api_facade->getAllFpgaCount();
         $userResCounter = $this->res_facade->getReservationsCountUser($userId);
-
 
         // Construct the JSON response
         $buttons = [];
@@ -117,19 +102,22 @@ class DefaultPresenter extends Presenter
             $reservationsCount = (isset($allReservations[$timestampKey])) ? $allReservations[$timestampKey] : 0;
             
             $locked = ($reservationsCount === $maxFpga) || ($userResCounter === 5);
-            $buttons[$timestampKey] = ['active_reservation' => $reservationExists,
-                                        'locked' => $locked];
-            
+            $buttons[$timestampKey] = [
+                'active_reservation' => $reservationExists,
+                'locked' => $locked
+            ];
+
             $currentTime->modify('+15 minutes');
         }
 
-        // Return the JSON response
         $this->sendJson($buttons);
     }
 
-    public function actionAllReservations(){
+    // Method to get all reservations
+    public function actionAllReservations()
+    {
         $currentTime = new DateTime();
-        $endTime = (clone $currentTime)->modify('+1  days');
+        $endTime = (clone $currentTime)->modify('+1 days');
 
         // Calculate the nearest 15-minute interval for the next window
         $minutes = $currentTime->format('i');
@@ -153,34 +141,34 @@ class DefaultPresenter extends Presenter
             $timestampKey = $currentTime->format('Y-m-d H:i:s');
             $reservationsCount = (isset($reservations[$timestampKey])) ? $reservations[$timestampKey] : 0;
             $buttons[$timestampKey] = ['reservation_count' => $reservationsCount];
-        
+
             $currentTime->modify('+15 minutes');
         }
 
-        // Return the JSON response
         $this->sendJson($buttons);
     }
 
-    public function actionGetFpgaCount(){
+    // Method to get FPGA count
+    public function actionGetFpgaCount()
+    {
         $this->payload->count = $this->api_facade->getAllFpgaCount();
-
         $this->sendPayload();
     }
 
+    // Method to get user reservation count
     public function actionGetUserReservationCount()
     {
         $this->payload->count = $this->res_facade->getReservationsCountUser($this->getUser()->getId());
-        
         $this->sendPayload();
     }
 
+    // Method to create or cancel a reservation
     public function actionReservation()
     {
         $userId = $this->getUser()->getId();
-
         $maxFpga = $this->api_facade->getAllFpgaCount();
         $reservations = $this->res_facade->getAllReservationsTimestamp();
-        
+
         $requestData = json_decode($this->getHttpRequest()->getRawBody(), true);
 
         // Extract timestamp and action from the request data
@@ -198,13 +186,11 @@ class DefaultPresenter extends Presenter
 
         if ($action == "create_reservation") {
             $this->res_facade->insertReservation($userId, $timestamp);
-        }
-        else if ($action == "cancel_reservation") {
+        } elseif ($action == "cancel_reservation") {
             $this->res_facade->deleteReservation($userId, $timestamp);
         }
 
         $response = new JsonResponse(['success' => true]);
         $this->sendResponse($response);
-
     }
 }

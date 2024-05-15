@@ -9,6 +9,7 @@ class Authenticator implements Nette\Security\Authenticator
     private $database;
     private $passwords;
 
+    // Constructor to initialize the database and passwords manager
     public function __construct(
         Nette\Database\Explorer $database,
         Nette\Security\Passwords $passwords
@@ -18,26 +19,23 @@ class Authenticator implements Nette\Security\Authenticator
         $this->passwords = $passwords;
     }
 
-
+    // Method to authenticate a user
     public function authenticate(string $username, string $password): SimpleIdentity
     {
         $row = $this->database->table('users')
             ->where('username', $username)
             ->fetch();
         
-        if(!$row)
-        {
+        if (!$row) {
             throw new Nette\Security\AuthenticationException('User not found.');
         }
 
-        if(!$this->passwords->verify($password, $row->password))
-        {
+        if (!$this->passwords->verify($password, $row->password)) {
             throw new Nette\Security\AuthenticationException('Invalid Password.');
         }
 
-
-        if ($row->username === "admin") 
-        {
+        // Check if the user is an admin
+        if ($row->username === "admin") {
             return new SimpleIdentity(
                 $row->id,
                 "admin",
@@ -52,10 +50,14 @@ class Authenticator implements Nette\Security\Authenticator
         );
     }
 
+    // Method to create a new user
     public function createUser(string $username, string $password)
     {
         $this->database
             ->table('users')
-            ->insert(['username' => $username, 'password' => $this->passwords->hash($password)]);
+            ->insert([
+                'username' => $username, 
+                'password' => $this->passwords->hash($password)
+            ]);
     }
 }

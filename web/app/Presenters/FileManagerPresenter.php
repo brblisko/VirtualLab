@@ -9,24 +9,25 @@ use Nette\Application\Responses\FileResponse;
 
 class FileManagerPresenter extends DefaultPresenter
 {
-
     private $fileManager;
 
+    // Constructor to initialize the FileManager
     public function __construct(FileManager $fileManager)
     {
         $this->fileManager = $fileManager;
     }
 
-
+    // Method to render the list of files and directories
     public function renderFiles()
     {
-    // Get the list of files and directories in the user's directory
-    $contents = $this->fileManager->listFiles($this->getUser()->getId());
-    
-    // Pass the list of files and directories to the template
-    $this->template->contents = $contents;
+        // Get the list of files and directories in the user's directory
+        $contents = $this->fileManager->listFiles($this->getUser()->getId());
+
+        // Pass the list of files and directories to the template
+        $this->template->contents = $contents;
     }
 
+    // Method to delete a directory
     public function actionDeleteDir($dir)
     {
         if ($this->fileManager->deleteDirectory($this->getUser()->getId(), $dir)) {
@@ -37,22 +38,23 @@ class FileManagerPresenter extends DefaultPresenter
         $this->redirect('files');
     }
 
+    // Method to create the upload form component
     public function createComponentUploadForm()
     {
-    $form = new Form();
-    $form->addUpload('uploadedFile', 'Upload File:')
-        ->setRequired('Please select a file to upload.');
+        $form = new Form();
+        $form->addUpload('uploadedFile', 'Upload File:')
+            ->setRequired('Please select a file to upload.');
 
-    $form->addSubmit('submit', 'Upload');
+        $form->addSubmit('submit', 'Upload');
 
-    $form->onSuccess[] = function (Form $form, $values) {
-        $this->actionUpload($values->uploadedFile);
-    };
+        $form->onSuccess[] = function (Form $form, $values) {
+            $this->actionUpload($values->uploadedFile);
+        };
 
-    return $form;
+        return $form;
     }
 
-
+    // Method to handle file upload
     public function actionUpload($uploadedFile)
     {
         try {
@@ -60,50 +62,44 @@ class FileManagerPresenter extends DefaultPresenter
             $this->fileManager->uploadFile($this->getUser()->getId(), $uploadedFile);
             $this->flashMessage('File uploaded successfully.', 'success');
         } catch (\Exception $e) {
-            $message ='Failed to upload file: ' . (string) $e->getMessage();
+            $message = 'Failed to upload file: ' . (string) $e->getMessage();
             $this->flashMessage($message, 'error');
         }
 
-        // Redirect back to the default action
+        // Redirect back to the files action
         $this->redirect('files');
     }
 
-
+    // Method to handle directory download
     public function actionDownloadDir($path)
     {
         $tempZip = $this->fileManager->downloadDir($this->getUser()->getId(), $path);
 
-
         if ($tempZip && file_exists($tempZip)) {
             $response = new FileResponse($tempZip, "archive.zip", 'application/zip', true);
             $this->sendResponse($response);
-        } 
-        else if (!file_exists($tempZip))
-        {
+        } else if (!file_exists($tempZip)) {
             $this->flashMessage('Could not create an archive from an empty directory.', 'error');
             $this->redirect('files');
-        }
-        else {
+        } else {
             $this->flashMessage("Could not create zip archive.", 'error');
             $this->redirect('files');
         }
-
     }
 
+    // Method to handle file download
     public function actionDownload($fileName)
     {
-            $filePath = $this->fileManager->getPath($this->getUser()->getId(), $fileName);
+        $filePath = $this->fileManager->getPath($this->getUser()->getId(), $fileName);
 
-            if($filePath !== null)
-            {
-                $this->sendResponse(new FileResponse($filePath));
-            }
-            else
-            {
-                $this->flashMessage('Failed to download file: The file is missing ', 'error');
-            }
+        if ($filePath !== null) {
+            $this->sendResponse(new FileResponse($filePath));
+        } else {
+            $this->flashMessage('Failed to download file: The file is missing', 'error');
+        }
     }
 
+    // Method to handle file deletion
     public function actionDelete($fileName)
     {
         try {
@@ -115,7 +111,7 @@ class FileManagerPresenter extends DefaultPresenter
             $this->flashMessage($message, 'error');
         }
 
-        // Redirect back to the default action
+        // Redirect back to the files action
         $this->redirect('files');
     }
 }
