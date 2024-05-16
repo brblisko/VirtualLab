@@ -95,7 +95,7 @@ final class AdminPresenter extends DefaultPresenter
     private function actionUpload($uFile)
     {
         // Define the path for the new CSV file
-        $newFilePath = '../../UserData/' . (string)$this->getUser()->getId() . '/UserPasswords.csv';
+        $newFilePath = '/home/student/UserData/' . (string)$this->getUser()->getId() . '/UserPasswords.csv';
 
         // Open the uploaded file for reading
         if (($handle = fopen($uFile->getTemporaryFile(), 'r')) !== FALSE) {
